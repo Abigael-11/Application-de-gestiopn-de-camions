@@ -1,0 +1,71 @@
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+from datetime import datetime
+from typing import List, Optional
+
+from app import schemas, crud
+from app.database import get_db
+
+router = APIRouter(prefix="/camions", tags=["Camions"])
+
+
+@router.post("/", response_model=schemas.Camion)
+def creer_camion(camion: schemas.CamionCreate, db: Session = Depends(get_db)):
+    return crud.create_camion(db, camion)
+
+
+@router.get("/", response_model=List[schemas.CamionStatutActuel])
+def lister_camions_avec_statut(db: Session = Depends(get_db)):
+    """Vue principale du tableau de bord : tous les camions + leur état actuel + durée."""
+    camions = crud.list_camions(db)
+    return [crud.get_statut_actuel(db, c) for c in camions]
+
+
+@router.get("/disponibles", response_model=List[schemas.Camion])
+def camions_disponibles(db: Session = Depends(get_db)):
+    return crud.get_camions_disponibles(db)
+
+
+@router.get("/{camion_id}", response_model=schemas.CamionStatutActuel)
+def obtenir_camion(camion_id: int, db: Session = Depends(get_db)):
+    camion = crud.get_camion(db, camion_id)
+    return crud.get_statut_actuel(db, camion)
+
+
+@router.patch("/{camion_id}", response_model=schemas.Camion)
+def modifier_camion(
+    camion_id: int,
+    updates: schemas.CamionUpdate,
+    db: Session = Depends(get_db),
+):
+    """
+    Modifie les infos d'un camion -- utile notamment pour renseigner
+    lien_dossier_externe (lien vers son dossier dans l'autre application :
+    GPS, rapport journalier, etc.), sans dupliquer ces données.
+    """
+    return crud.update_camion(db, camion_id, updates)
+
+
+@router.post("/{camion_id}/changer-etat", response_model=schemas.HistoriqueEtatOut)
+def changer_etat_camion(
+    camion_id: int,
+    changement: schemas.ChangementEtat,
+    db: Session = Depends(get_db),
+):
+    """L'action centrale : déclarer le nouvel état d'un camion en un clic."""
+    return crud.changer_etat(db, camion_id, changement)
+
+
+@router.get("/{camion_id}/historique", response_model=List[schemas.HistoriqueEtatOut])
+def historique_camion(
+    camion_id: int,
+    depuis_jours: Optional[int] = Query(None, description="Filtrer sur les N derniers jours"),
+    db: Session = Depends(get_db),
+):
+    """La 'traçabilité' demandée : timeline complète d'un camion."""
+    crud.get_camion(db, camion_id)  # vérifie existence
+    depuis = None
+    if depuis_jours:
+        from datetime import timedelta, timezone
+        depuis = datetime.now(timezone.utc) - timedelta(days=depuis_jours)
+    return crud.get_historique_camion(db, camion_id, depuis)
