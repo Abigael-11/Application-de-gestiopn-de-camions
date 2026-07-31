@@ -1,0 +1,13 @@
+# Environnement virtuel Python -- chacun le recrée localement
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Fichiers de configuration contenant des secrets -- ne jamais commiter
+.env
+
+# Fichiers générés par l'OS / éditeurs
+.DS_Store
+.vscode/
+*.log

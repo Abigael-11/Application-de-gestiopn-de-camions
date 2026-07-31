@@ -3,31 +3,38 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import List, Optional
 
-from app import schemas, crud
+from app import schemas, crud, auth, models
 from app.database import get_db
 
 router = APIRouter(prefix="/camions", tags=["Camions"])
 
+# Lecture : les 3 rôles peuvent consulter (operation, direction, admin)
+LECTURE = Depends(auth.get_current_user)
+
 
 @router.post("/", response_model=schemas.Camion)
-def creer_camion(camion: schemas.CamionCreate, db: Session = Depends(get_db)):
+def creer_camion(
+    camion: schemas.CamionCreate,
+    db: Session = Depends(get_db),
+    _user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
+):
     return crud.create_camion(db, camion)
 
 
 @router.get("/", response_model=List[schemas.CamionStatutActuel])
-def lister_camions_avec_statut(db: Session = Depends(get_db)):
+def lister_camions_avec_statut(db: Session = Depends(get_db), _user=LECTURE):
     """Vue principale du tableau de bord : tous les camions + leur état actuel + durée."""
     camions = crud.list_camions(db)
     return [crud.get_statut_actuel(db, c) for c in camions]
 
 
 @router.get("/disponibles", response_model=List[schemas.Camion])
-def camions_disponibles(db: Session = Depends(get_db)):
+def camions_disponibles(db: Session = Depends(get_db), _user=LECTURE):
     return crud.get_camions_disponibles(db)
 
 
 @router.get("/{camion_id}", response_model=schemas.CamionStatutActuel)
-def obtenir_camion(camion_id: int, db: Session = Depends(get_db)):
+def obtenir_camion(camion_id: int, db: Session = Depends(get_db), _user=LECTURE):
     camion = crud.get_camion(db, camion_id)
     return crud.get_statut_actuel(db, camion)
 
@@ -37,6 +44,7 @@ def modifier_camion(
     camion_id: int,
     updates: schemas.CamionUpdate,
     db: Session = Depends(get_db),
+    _user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
 ):
     """
     Modifie les infos d'un camion -- utile notamment pour renseigner
@@ -51,8 +59,13 @@ def changer_etat_camion(
     camion_id: int,
     changement: schemas.ChangementEtat,
     db: Session = Depends(get_db),
+    user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
 ):
     """L'action centrale : déclarer le nouvel état d'un camion en un clic."""
+    # Si le champ saisi_par n'est pas fourni explicitement, on utilise le nom
+    # de l'utilisateur connecté -- plus fiable qu'un champ texte libre.
+    if not changement.saisi_par:
+        changement.saisi_par = user.nom
     return crud.changer_etat(db, camion_id, changement)
 
 
@@ -61,6 +74,7 @@ def historique_camion(
     camion_id: int,
     depuis_jours: Optional[int] = Query(None, description="Filtrer sur les N derniers jours"),
     db: Session = Depends(get_db),
+    _user=LECTURE,
 ):
     """La 'traçabilité' demandée : timeline complète d'un camion."""
     crud.get_camion(db, camion_id)  # vérifie existence

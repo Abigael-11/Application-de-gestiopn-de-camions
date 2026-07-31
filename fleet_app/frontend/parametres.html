@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paramètres — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  .ptabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .ptab { padding-bottom: 10px; color: var(--text-secondary); font-size: 13.5px; cursor: pointer; border-bottom: 2px solid transparent; }
+  .ptab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .status-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; }
+  .status-actif { background: var(--actif-bg); color: var(--actif); }
+  .status-attente { background: var(--attente-bg); color: var(--attente); }
+  .status-immobilisation { background: var(--immob-bg); color: var(--immob); }
+  .readonly-note { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .link-cell { font-family: monospace; font-size: 12px; color: var(--text-secondary); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seuil-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; max-width: 520px; }
+  .seuil-warning { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius); padding: 12px 14px; font-size: 12.5px; margin-bottom: 18px; }
+  .seuil-value { font-size: 24px; font-weight: 700; margin: 10px 0; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">🚚</div>
+      <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" href="index.html">▦ Tableau de bord</a>
+    <a class="nav-item active" href="parametres.html">⚙ Paramètres</a>
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Paramètres</h1>
+        <p class="page-subtitle">Configuration de l'application et de la flotte</p>
+      </div>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+
+    <div class="ptabs">
+      <div class="ptab active" data-panel="etats">États</div>
+      <div class="ptab" data-panel="camions">Camions</div>
+      <div class="ptab" data-panel="utilisateurs">Utilisateurs</div>
+      <div class="ptab" data-panel="seuils">Seuils d'alerte</div>
+    </div>
+
+    <!-- États -->
+    <div class="panel active" id="panel-etats">
+      <div class="readonly-note">Les 24 états sont définis dans la base de données. La modification depuis cette interface n'est pas encore disponible — pour changer un état, éditez <code>seed_etats.py</code>.</div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Nom de l'état</th><th>Catégorie</th></tr></thead>
+          <tbody id="etatsBody"><tr><td colspan="2"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Camions -->
+    <div class="panel" id="panel-camions">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <button class="btn btn-primary" id="btnNouveauCamion">+ Ajouter un camion</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Immatriculation</th><th>Flotte</th><th>Capacité</th><th>Chauffeur</th><th>Lien dossier externe</th><th>Actions</th></tr></thead>
+          <tbody id="camionsBody"><tr><td colspan="6"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Utilisateurs -->
+    <div class="panel" id="panel-utilisateurs">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <button class="btn btn-primary" id="btnNouvelUtilisateur">+ Ajouter un utilisateur</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="utilisateursBody"><tr><td colspan="5"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Seuils -->
+    <div class="panel" id="panel-seuils">
+      <div class="seuil-box">
+        <div class="seuil-warning">⚠ Un camion immobilisé (ou en attente) dépassant ce seuil sera mis en évidence en rouge sur le tableau de bord et compté dans le compteur d'alertes.</div>
+        <label style="font-size:13px;font-weight:600;">Alerter après combien d'heures d'immobilisation ?</label>
+        <div class="seuil-value"><span id="seuilVal">48</span> heures <span style="color:var(--text-muted);font-weight:400;font-size:14px;">(<span id="seuilJours">2</span>j)</span></div>
+        <input type="range" id="seuilSlider" min="6" max="168" step="6" value="48" />
+        <div style="display:flex;justify-content:space-between;">
+          <button class="btn btn-primary" id="btnSaveSeuil" style="margin-top:16px;">💾 Enregistrer les paramètres</button>
+          <span class="detail-sub" style="margin-top:24px;">Valeur actuelle : <span id="seuilActuel">48h</span></span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal nouvel utilisateur -->
+<div class="modal-overlay" id="modalOverlayUser">
+  <div class="modal">
+    <h3>Nouvel utilisateur</h3>
+    <p class="sub">Crée un compte pour accéder à l'application.</p>
+    <div class="modal-error" id="modalErrorUser"></div>
+    <div class="field"><label for="uNom">Nom complet</label><input type="text" id="uNom" placeholder="ex : Jean Mbeki" /></div>
+    <div class="field"><label for="uIdentifiant">Identifiant de connexion</label><input type="text" id="uIdentifiant" placeholder="ex : jean.op" /></div>
+    <div class="field"><label for="uMotDePasse">Mot de passe temporaire</label><input type="text" id="uMotDePasse" placeholder="au moins 8 caractères" /></div>
+    <div class="field">
+      <label for="uRole">Rôle</label>
+      <select id="uRole">
+        <option value="operation">Opération (peut changer les états)</option>
+        <option value="direction">Direction (consultation seule)</option>
+        <option value="admin">Admin (accès complet)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelUser">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirmUser">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal éditer lien externe -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Modifier le camion</h3>
+    <p class="sub" id="modalSub"></p>
+    <div class="modal-error" id="modalError"></div>
+    <div class="field"><label for="fChauffeur">Chauffeur assigné</label><input type="text" id="fChauffeur" placeholder="ex : Paul Ondimba" /></div>
+    <div class="field"><label for="fLien">Lien vers le dossier externe (GPS, rapports…)</label><input type="text" id="fLien" placeholder="https://…" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancel">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirm">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nouveau camion -->
+<div class="modal-overlay" id="modalOverlayCamion">
+  <div class="modal">
+    <h3>Nouveau camion</h3>
+    <p class="sub">Enregistre un nouveau camion dans la flotte.</p>
+    <div class="modal-error" id="modalErrorCamion"></div>
+    <div class="field"><label for="cImmat">Immatriculation</label><input type="text" id="cImmat" placeholder="ex : CIMAF-140" /></div>
+    <div class="field"><label for="cMarque">Flotte / Marque</label><input type="text" id="cMarque" placeholder="ex : CIMAF, Flatbed…" /></div>
+    <div class="field"><label for="cCapacite">Capacité (tonnes)</label><input type="number" id="cCapacite" placeholder="ex : 30" /></div>
+    <div class="field"><label for="cChauffeur">Chauffeur assigné (optionnel)</label><input type="text" id="cChauffeur" placeholder="ex : Paul Ondimba" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelCamion">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirmCamion">Créer le camion</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/parametres.js"></script>
+</body>
+</html>

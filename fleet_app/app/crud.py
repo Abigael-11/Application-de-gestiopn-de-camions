@@ -96,6 +96,7 @@ def changer_etat(db: Session, camion_id: int, changement: schemas.ChangementEtat
             etat_id=nouvel_etat.id,
             date_debut=maintenant,
             lieu=changement.lieu,
+            marchandise=changement.marchandise,
             motif=changement.motif,
             saisi_par=changement.saisi_par,
         )

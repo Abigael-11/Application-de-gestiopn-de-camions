@@ -6,6 +6,23 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
+class Utilisateur(Base):
+    """
+    Compte permettant de se connecter à l'application.
+    Rôles possibles : 'operation' (saisit les états), 'direction' (consulte
+    uniquement), 'admin' (gère utilisateurs, camions et paramètres).
+    """
+    __tablename__ = "utilisateurs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nom = Column(String(100), nullable=False)
+    identifiant = Column(String(50), unique=True, nullable=False)  # nom d'utilisateur pour se connecter
+    mot_de_passe_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False)  # 'operation' | 'direction' | 'admin'
+    actif = Column(Boolean, default=True)
+    cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
 class Camion(Base):
     __tablename__ = "camions"
 
@@ -16,6 +33,7 @@ class Camion(Base):
     capacite_tonnes = Column(Numeric)
     actif = Column(Boolean, default=True)
     lien_dossier_externe = Column(String(300), nullable=True)  # ex: URL vers le dossier/GPS de l'autre appli
+    chauffeur_actuel = Column(String(100), nullable=True)  # nom du chauffeur assigné à ce camion
     cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     historique = relationship("HistoriqueEtat", back_populates="camion")
@@ -53,6 +71,7 @@ class HistoriqueEtat(Base):
     date_fin = Column(TIMESTAMP(timezone=True), nullable=True)
 
     lieu = Column(String(150), nullable=True)   # zone de chargement / livraison si applicable
+    marchandise = Column(String(150), nullable=True)  # nature de la cargaison transportée
     motif = Column(Text, nullable=True)
     saisi_par = Column(String(100), nullable=True)  # nom/identifiant de la personne — pas d'auth complexe au MVP
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from app import schemas, crud
+from app import schemas, crud, auth
 from app.database import get_db
 
 router = APIRouter(prefix="/stats", tags=["Statistiques"])
@@ -14,6 +14,7 @@ def duree_moyenne_par_etat(
     camion_id: Optional[int] = Query(None, description="Filtrer sur un camion précis"),
     derniers_jours: Optional[int] = Query(30, description="Période à analyser, en jours"),
     db: Session = Depends(get_db),
+    _user=Depends(auth.get_current_user),
 ):
     """
     Répond directement au besoin du DG :

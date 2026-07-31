@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tableau de bord — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">🚚</div>
+      <div>
+        <div class="brand-name">FLEET OPS</div>
+        <div class="brand-sub">Suivi de flotte</div>
+      </div>
+    </div>
+
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" href="index.html">▦ Tableau de bord</a>
+    <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
+
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Tableau de bord de la flotte</h1>
+        <p class="page-subtitle" id="lastUpdate">Chargement…</p>
+      </div>
+      <button class="btn btn-secondary" id="btnRefresh">↻ Actualiser</button>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+
+    <div class="metrics" id="metrics">
+      <div class="metric-card"><div class="skeleton" style="height:60px"></div></div>
+      <div class="metric-card"><div class="skeleton" style="height:60px"></div></div>
+      <div class="metric-card"><div class="skeleton" style="height:60px"></div></div>
+    </div>
+
+    <div class="legend">
+      <span>Légende :</span>
+      <span><span class="legend-dot" style="background:var(--actif)"></span>Actif</span>
+      <span><span class="legend-dot" style="background:var(--attente)"></span>Attente</span>
+      <span><span class="legend-dot" style="background:var(--immob)"></span>Immobilisation</span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="tabs" id="tabs">
+          <div class="tab active" data-filter="tous">Tous</div>
+          <div class="tab" data-filter="actif">Actifs</div>
+          <div class="tab" data-filter="attente">Attente</div>
+          <div class="tab" data-filter="immobilisation">Immobilisés <span class="tab-count" id="countImmob">0</span></div>
+        </div>
+        <input type="text" class="search-input" id="search" placeholder="Rechercher un camion ou un lieu…" />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Immatriculation</th>
+            <th>Statut actuel</th>
+            <th>Depuis</th>
+            <th>Lieu</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="5"><div class="skeleton" style="height:20px"></div></td></tr>
+        </tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <div class="empty-state-title">Aucun camion ne correspond</div>
+        <div>Essayez un autre filtre ou une autre recherche.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal : changer l'état -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Changer l'état</h3>
+    <p class="sub" id="modalSub"></p>
+    <div class="modal-error" id="modalError"></div>
+    <div class="field">
+      <label for="fEtat">Nouvel état</label>
+      <select id="fEtat"></select>
+    </div>
+    <div class="field">
+      <label for="fLieu">Lieu (optionnel)</label>
+      <input type="text" id="fLieu" placeholder="ex : Atelier Douala" />
+    </div>
+    <div class="field">
+      <label for="fMarchandise">Marchandise transportée (optionnel)</label>
+      <input type="text" id="fMarchandise" placeholder="ex : Ciment, 30t" />
+    </div>
+    <div class="field">
+      <label for="fSaisiPar">Saisi par</label>
+      <input type="text" id="fSaisiPar" placeholder="ex : Jean (opération)" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancel">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirm">Confirmer le changement</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

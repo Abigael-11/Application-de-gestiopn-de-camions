@@ -3,6 +3,39 @@ from datetime import datetime
 from typing import Optional
 
 
+# ---------- Authentification ----------
+
+class LoginRequest(BaseModel):
+    identifiant: str
+    mot_de_passe: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    role: str
+    nom: str
+    identifiant: str
+
+
+class UtilisateurCreate(BaseModel):
+    nom: str
+    identifiant: str
+    mot_de_passe: str
+    role: str  # 'operation' | 'direction' | 'admin'
+
+
+class UtilisateurOut(BaseModel):
+    id: int
+    nom: str
+    identifiant: str
+    role: str
+    actif: bool
+
+    class Config:
+        from_attributes = True
+
+
 # ---------- Camions ----------
 
 class CamionBase(BaseModel):
@@ -11,6 +44,7 @@ class CamionBase(BaseModel):
     modele: Optional[str] = None
     capacite_tonnes: Optional[float] = None
     lien_dossier_externe: Optional[str] = None
+    chauffeur_actuel: Optional[str] = None
 
 
 class CamionCreate(CamionBase):
@@ -23,6 +57,7 @@ class CamionUpdate(BaseModel):
     modele: Optional[str] = None
     capacite_tonnes: Optional[float] = None
     lien_dossier_externe: Optional[str] = None
+    chauffeur_actuel: Optional[str] = None
 
 
 class Camion(CamionBase):
@@ -54,6 +89,7 @@ class ChangementEtat(BaseModel):
     """Ce que l'utilisateur envoie quand il déclare un nouvel état pour un camion."""
     etat_code: str          # ex: "panne", "chargement"...
     lieu: Optional[str] = None
+    marchandise: Optional[str] = None
     motif: Optional[str] = None
     saisi_par: Optional[str] = None
 
@@ -64,6 +100,7 @@ class HistoriqueEtatOut(BaseModel):
     date_debut: datetime
     date_fin: Optional[datetime] = None
     lieu: Optional[str] = None
+    marchandise: Optional[str] = None
     motif: Optional[str] = None
     saisi_par: Optional[str] = None
 
