@@ -54,3 +54,17 @@ def desactiver_utilisateur(
     db.commit()
     db.refresh(utilisateur)
     return utilisateur
+
+@router.patch("/{utilisateur_id}/reactiver", response_model=schemas.UtilisateurOut)
+def reactiver_utilisateur(
+    utilisateur_id: int,
+    db: Session = Depends(get_db),
+    _admin=Depends(auth.require_roles("admin")),
+):
+    utilisateur = db.query(models.Utilisateur).filter(models.Utilisateur.id == utilisateur_id).first()
+    if not utilisateur:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+    utilisateur.actif = True
+    db.commit()
+    db.refresh(utilisateur)
+    return utilisateur

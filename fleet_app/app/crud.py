@@ -22,8 +22,11 @@ def create_camion(db: Session, camion: schemas.CamionCreate) -> models.Camion:
     return db_camion
 
 
-def list_camions(db: Session):
-    return db.query(models.Camion).filter(models.Camion.actif == True).all()  # noqa: E712
+def list_camions(db: Session, inclure_inactifs: bool = False):
+    query = db.query(models.Camion)
+    if not inclure_inactifs:
+        query = query.filter(models.Camion.actif == True)  # noqa: E712
+    return query.all()
 
 
 def get_camion(db: Session, camion_id: int) -> models.Camion:
@@ -40,6 +43,26 @@ def update_camion(db: Session, camion_id: int, updates: schemas.CamionUpdate) ->
     db.commit()
     db.refresh(camion)
     return camion
+
+
+def supprimer_camion(db: Session, camion_id: int):
+    """
+    Suppression définitive -- autorisée SEULEMENT si aucun historique n'est
+    lié à ce camion (pour ne jamais perdre de traçabilité par accident).
+    Sinon, on invite à désactiver le camion à la place (réversible).
+    """
+    camion = get_camion(db, camion_id)
+    nb_historique = db.query(models.HistoriqueEtat).filter(
+        models.HistoriqueEtat.camion_id == camion_id
+    ).count()
+    if nb_historique > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Impossible de supprimer : {nb_historique} ligne(s) d'historique liée(s) à ce camion. "
+                   f"Désactivez-le plutôt (l'historique sera conservé).",
+        )
+    db.delete(camion)
+    db.commit()
 
 
 # ---------- États de référence ----------

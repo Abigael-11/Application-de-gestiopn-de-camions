@@ -59,11 +59,14 @@
 
     <!-- États -->
     <div class="panel active" id="panel-etats">
-      <div class="readonly-note">Les 24 états sont définis dans la base de données. La modification depuis cette interface n'est pas encore disponible — pour changer un état, éditez <code>seed_etats.py</code>.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="readonly-note" style="margin:0;">Le <strong>groupe</strong> est votre catégorisation métier (affichage). La <strong>catégorie</strong> (Actif/Attente/Immobilisation) pilote le calcul du taux d'occupation — à bien vérifier pour chaque état.</div>
+        <button class="btn btn-primary" id="btnNouvelEtat" style="white-space:nowrap;margin-left:16px;">+ Ajouter un état</button>
+      </div>
       <div class="table-card">
         <table>
-          <thead><tr><th>Nom de l'état</th><th>Catégorie</th></tr></thead>
-          <tbody id="etatsBody"><tr><td colspan="2"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+          <thead><tr><th>Nom de l'état</th><th>Groupe</th><th>Catégorie (calcul)</th><th>Actions</th></tr></thead>
+          <tbody id="etatsBody"><tr><td colspan="4"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -75,8 +78,8 @@
       </div>
       <div class="table-card">
         <table>
-          <thead><tr><th>Immatriculation</th><th>Flotte</th><th>Capacité</th><th>Chauffeur</th><th>Lien dossier externe</th><th>Actions</th></tr></thead>
-          <tbody id="camionsBody"><tr><td colspan="6"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+          <thead><tr><th>Immatriculation</th><th>Flotte</th><th>Capacité</th><th>Chauffeur</th><th>Lien dossier externe</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="camionsBody"><tr><td colspan="7"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -132,6 +135,41 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancelUser">Annuler</button>
       <button class="btn btn-primary" id="btnConfirmUser">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nouvel état -->
+<div class="modal-overlay" id="modalOverlayEtat">
+  <div class="modal">
+    <h3 id="modalEtatTitre">Nouvel état</h3>
+    <p class="sub">Un état représente une situation possible pour un camion.</p>
+    <div class="modal-error" id="modalErrorEtat"></div>
+    <div class="field"><label for="eCode">Code interne (unique, sans espace)</label><input type="text" id="eCode" placeholder="ex : waiting_customer" /></div>
+    <div class="field"><label for="eLibelle">Libellé affiché</label><input type="text" id="eLibelle" placeholder="ex : Waiting for customer" /></div>
+    <div class="field">
+      <label for="eGroupe">Groupe métier</label>
+      <select id="eGroupe">
+        <option value="Deplacement">Deplacement</option>
+        <option value="Operation">Operation</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Incident">Incident</option>
+        <option value="Attente">Attente</option>
+        <option value="Douane">Douane</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="eCategorie">Catégorie (pilote le calcul du taux d'occupation)</label>
+      <select id="eCategorie">
+        <option value="actif">Actif</option>
+        <option value="attente">Attente</option>
+        <option value="immobilisation">Immobilisation</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelEtat">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirmEtat">Enregistrer</button>
     </div>
   </div>
 </div>

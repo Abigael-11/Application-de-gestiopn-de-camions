@@ -1,18 +1,54 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from app import schemas, crud, auth
+from app import schemas, crud, auth, models
 from app.database import get_db
 
 router = APIRouter(prefix="/etats", tags=["États de référence"])
 
+CATEGORIES_VALIDES = ("actif", "attente", "immobilisation")
+
 
 @router.get("/", response_model=List[schemas.EtatReference])
 def lister_etats(db: Session = Depends(get_db), _user=Depends(auth.get_current_user)):
-    """
-    Liste des états possibles pour un camion.
-    Cette liste vit en base de données -> modifiable sans toucher au code
-    une fois qu'on aura confirmé la liste exacte avec le DG (via le Sheet).
-    """
-    return crud.list_etats_reference(db)
+    """Liste des états possibles pour un camion, avec leur groupe métier et categorie fonctionnelle."""
+    return db.query(models.EtatReference).all()
+
+
+@router.post("/", response_model=schemas.EtatReference)
+def creer_etat(
+    payload: schemas.EtatCreate,
+    db: Session = Depends(get_db),
+    _admin=Depends(auth.require_roles("admin")),
+):
+    if payload.categorie not in CATEGORIES_VALIDES:
+        raise HTTPException(status_code=400, detail=f"Categorie invalide. Doit être l'un de : {CATEGORIES_VALIDES}")
+    existant = db.query(models.EtatReference).filter(models.EtatReference.code == payload.code).first()
+    if existant:
+        raise HTTPException(status_code=400, detail="Ce code d'état existe déjà.")
+    etat = models.EtatReference(**payload.model_dump())
+    db.add(etat)
+    db.commit()
+    db.refresh(etat)
+    return etat
+
+
+@router.patch("/{etat_id}", response_model=schemas.EtatReference)
+def modifier_etat(
+    etat_id: int,
+    payload: schemas.EtatUpdate,
+    db: Session = Depends(get_db),
+    _admin=Depends(auth.require_roles("admin")),
+):
+    etat = db.query(models.EtatReference).filter(models.EtatReference.id == etat_id).first()
+    if not etat:
+        raise HTTPException(status_code=404, detail="État introuvable")
+    updates = payload.model_dump(exclude_unset=True)
+    if "categorie" in updates and updates["categorie"] not in CATEGORIES_VALIDES:
+        raise HTTPException(status_code=400, detail=f"Categorie invalide. Doit être l'un de : {CATEGORIES_VALIDES}")
+    for champ, valeur in updates.items():
+        setattr(etat, champ, valeur)
+    db.commit()
+    db.refresh(etat)
+    return etat

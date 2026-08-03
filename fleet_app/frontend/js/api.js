@@ -51,17 +51,23 @@ class ApiError extends Error {
 }
 
 const api = {
-  listCamions: () => apiFetch("/camions/"),
+  listCamions: (inclureInactifs) => apiFetch(`/camions/${inclureInactifs ? "?inclure_inactifs=true" : ""}`),
   getCamion: (id) => apiFetch(`/camions/${id}`),
   createCamion: (payload) =>
     apiFetch("/camions/", { method: "POST", body: JSON.stringify(payload) }),
   updateCamion: (id, payload) =>
     apiFetch(`/camions/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteCamion: (id) =>
+    apiFetch(`/camions/${id}`, { method: "DELETE" }),
   changerEtat: (id, payload) =>
     apiFetch(`/camions/${id}/changer-etat`, { method: "POST", body: JSON.stringify(payload) }),
   historique: (id, depuisJours) =>
     apiFetch(`/camions/${id}/historique${depuisJours ? `?depuis_jours=${depuisJours}` : ""}`),
   listEtats: () => apiFetch("/etats/"),
+  createEtat: (payload) =>
+    apiFetch("/etats/", { method: "POST", body: JSON.stringify(payload) }),
+  updateEtat: (id, payload) =>
+    apiFetch(`/etats/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   dureeMoyenne: (camionId, derniersJours) =>
     apiFetch(
       `/stats/duree-moyenne?derniers_jours=${derniersJours || 30}` +

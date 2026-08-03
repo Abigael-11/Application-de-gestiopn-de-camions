@@ -22,9 +22,13 @@ def creer_camion(
 
 
 @router.get("/", response_model=List[schemas.CamionStatutActuel])
-def lister_camions_avec_statut(db: Session = Depends(get_db), _user=LECTURE):
+def lister_camions_avec_statut(
+    inclure_inactifs: bool = Query(False, description="Inclure les camions désactivés (pour la gestion admin/opération)"),
+    db: Session = Depends(get_db),
+    _user=LECTURE,
+):
     """Vue principale du tableau de bord : tous les camions + leur état actuel + durée."""
-    camions = crud.list_camions(db)
+    camions = crud.list_camions(db, inclure_inactifs=inclure_inactifs)
     return [crud.get_statut_actuel(db, c) for c in camions]
 
 
@@ -52,6 +56,20 @@ def modifier_camion(
     GPS, rapport journalier, etc.), sans dupliquer ces données.
     """
     return crud.update_camion(db, camion_id, updates)
+
+
+@router.delete("/{camion_id}")
+def supprimer_camion(
+    camion_id: int,
+    db: Session = Depends(get_db),
+    _user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
+):
+    """
+    Suppression définitive -- bloquée si le camion a un historique
+    (protège contre la perte accidentelle de traçabilité).
+    """
+    crud.supprimer_camion(db, camion_id)
+    return {"detail": "Camion supprimé."}
 
 
 @router.post("/{camion_id}/changer-etat", response_model=schemas.HistoriqueEtatOut)

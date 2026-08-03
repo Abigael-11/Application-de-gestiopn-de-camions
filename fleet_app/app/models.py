@@ -42,16 +42,20 @@ class Camion(Base):
 class EtatReference(Base):
     """
     Liste des états possibles pour un camion.
-    NOTE: cette liste est volontairement en base de données (pas codée en dur)
-    pour qu'on puisse l'ajuster facilement une fois le Google Sheet du DG analysé,
-    sans toucher au code ni au schéma.
+    Deux catégorisations distinctes et indépendantes :
+    - `categorie` (actif/attente/immobilisation) : pilote le calcul du taux
+      d'occupation. Ne pas confondre avec `groupe`.
+    - `groupe` (Transport, Chargement, Maintenance, Pannes, Attentes admin,
+      Douanes...) : catégorisation métier pour l'affichage/organisation,
+      définie par l'équipe opération. N'affecte PAS les calculs.
     """
     __tablename__ = "etats_reference"
 
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String(30), unique=True, nullable=False)   # ex: 'panne'
     libelle = Column(String(100), nullable=False)             # ex: 'En panne'
-    categorie = Column(String(30))                            # ex: 'immobilisation' / 'operation'
+    categorie = Column(String(30))                            # 'actif' | 'attente' | 'immobilisation'
+    groupe = Column(String(60), nullable=True)                # ex: 'Transport / Déplacement'
 
     historique = relationship("HistoriqueEtat", back_populates="etat")
 

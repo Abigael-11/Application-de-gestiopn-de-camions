@@ -58,6 +58,7 @@ class CamionUpdate(BaseModel):
     capacite_tonnes: Optional[float] = None
     lien_dossier_externe: Optional[str] = None
     chauffeur_actuel: Optional[str] = None
+    actif: Optional[bool] = None
 
 
 class Camion(CamionBase):
@@ -74,6 +75,7 @@ class EtatReferenceBase(BaseModel):
     code: str
     libelle: str
     categorie: Optional[str] = None
+    groupe: Optional[str] = None
 
 
 class EtatReference(EtatReferenceBase):
@@ -81,6 +83,19 @@ class EtatReference(EtatReferenceBase):
 
     class Config:
         from_attributes = True
+
+
+class EtatCreate(BaseModel):
+    code: str
+    libelle: str
+    categorie: str  # 'actif' | 'attente' | 'immobilisation'
+    groupe: Optional[str] = None
+
+
+class EtatUpdate(BaseModel):
+    libelle: Optional[str] = None
+    categorie: Optional[str] = None
+    groupe: Optional[str] = None
 
 
 # ---------- Historique / changement d'état ----------
