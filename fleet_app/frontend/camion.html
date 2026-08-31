@@ -2,11 +2,13 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Détail camion — Fleet Ops</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
 <style>
-  .detail-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .detail-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
   .detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
   .detail-card.accent { border-left: 3px solid var(--immob); }
   .detail-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; margin-bottom: 10px; }
@@ -14,8 +16,11 @@
   .detail-sub { font-size: 12px; color: var(--text-muted); }
   .anomalie-tag { color: var(--immob); font-size: 12px; font-weight: 700; }
   .header-title-row { display: flex; align-items: center; gap: 10px; }
-  .mini-timeline { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin-top: 10px; }
-  .mini-timeline > div { height: 100%; }
+  .mini-timeline { position: relative; margin-top: 12px; }
+  .mini-timeline .taux-point { cursor: pointer; }
+  .mini-tooltip { position: absolute; bottom: calc(100% + 10px); transform: translateX(-50%); background: var(--bg-card-hover); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,0.35); pointer-events: none; opacity: 0; transition: opacity 0.12s ease; z-index: 20; }
+  .mini-tooltip.show { opacity: 1; }
+  .mini-tooltip strong { display: block; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -23,11 +28,12 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-icon">🚚</div>
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
       <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
     </div>
     <div class="nav-label">Navigation</div>
     <a class="nav-item" href="index.html">▦ Tableau de bord</a>
+    <a class="nav-item" href="missions.html">▤ Missions</a>
     <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
@@ -89,7 +95,6 @@
     <div class="modal-error" id="modalError"></div>
     <div class="field"><label for="fEtat">Nouvel état</label><select id="fEtat"></select></div>
     <div class="field"><label for="fLieu">Lieu (optionnel)</label><input type="text" id="fLieu" placeholder="ex : Atelier Douala" /></div>
-    <div class="field"><label for="fMarchandise">Marchandise transportée (optionnel)</label><input type="text" id="fMarchandise" placeholder="ex : Ciment, 30t" /></div>
     <div class="field"><label for="fSaisiPar">Saisi par</label><input type="text" id="fSaisiPar" placeholder="ex : Jean (opération)" /></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancel">Annuler</button>

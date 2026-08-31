@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tableau de bord — Fleet Ops</title>
 <link rel="stylesheet" href="css/style.css" />
@@ -11,7 +12,7 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-icon">🚚</div>
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
       <div>
         <div class="brand-name">FLEET OPS</div>
         <div class="brand-sub">Suivi de flotte</div>
@@ -20,11 +21,12 @@
 
     <div class="nav-label">Navigation</div>
     <a class="nav-item active" href="index.html">▦ Tableau de bord</a>
+    <a class="nav-item" href="missions.html">▤ Missions</a>
     <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
 
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
-      <div class="loc">Brazzaville · Congo</div>
+      <div class="loc">Brazzaville Congo</div>
     </div>
   </aside>
 
@@ -98,10 +100,6 @@
     <div class="field">
       <label for="fLieu">Lieu (optionnel)</label>
       <input type="text" id="fLieu" placeholder="ex : Atelier Douala" />
-    </div>
-    <div class="field">
-      <label for="fMarchandise">Marchandise transportée (optionnel)</label>
-      <input type="text" id="fMarchandise" placeholder="ex : Ciment, 30t" />
     </div>
     <div class="field">
       <label for="fSaisiPar">Saisi par</label>

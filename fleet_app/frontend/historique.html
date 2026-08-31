@@ -2,14 +2,16 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Historique — Fleet Ops</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
 <style>
   .period-tabs { display: flex; gap: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; }
   .period-tab { padding: 7px 14px; border-radius: 6px; font-size: 12.5px; color: var(--text-secondary); cursor: pointer; }
   .period-tab.active { background: var(--bg-card-hover); color: var(--accent); font-weight: 600; }
-  .content-grid { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
+  .content-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
   .frise-track { position: relative; height: 46px; background: var(--bg-app); border-radius: 6px; overflow: hidden; margin-top: 14px; }
   .frise-seg { position: absolute; top: 0; height: 100%; }
   .frise-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin-top: 6px; }
@@ -22,11 +24,12 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-icon">🚚</div>
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
       <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
     </div>
     <div class="nav-label">Navigation</div>
     <a class="nav-item" href="index.html">▦ Tableau de bord</a>
+    <a class="nav-item" href="missions.html">▤ Missions</a>
     <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
@@ -71,12 +74,16 @@
 
       <div class="table-card" style="padding:16px;">
         <div style="font-weight:700;font-size:14px;margin-bottom:6px;">Récapitulatif de la période</div>
-        <div class="recap-bar" id="recapBar"></div>
-        <div id="recapRows"></div>
-        <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;display:flex;justify-content:space-between;">
+        <div style="display:flex;justify-content:space-between;">
           <span>Taux d'occupation</span>
           <strong id="tauxOccupation" style="color:var(--accent)">—</strong>
         </div>
+      </div>
+    </div>
+
+    <div class="table-card" style="padding:16px;margin-top:16px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px;">Répartition (7 catégories DG)</div>
+      <div id="dgRepartitionRows"></div>
       </div>
     </div>
   </main>

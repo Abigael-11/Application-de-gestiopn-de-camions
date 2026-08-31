@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import camions, stats, etats, auth, utilisateurs
+from app.routers import camions, stats, etats, auth, utilisateurs, chauffeurs, missions
 
 # Crée les tables si elles n'existent pas encore (suffisant pour le MVP ;
 # on passera à Alembic pour les migrations quand le schéma se stabilisera)
@@ -33,6 +33,8 @@ app.include_router(stats.router)
 app.include_router(etats.router)
 app.include_router(auth.router)
 app.include_router(utilisateurs.router)
+app.include_router(chauffeurs.router)
+app.include_router(missions.router)
 
 
 @app.get("/")

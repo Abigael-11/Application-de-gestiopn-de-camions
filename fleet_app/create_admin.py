@@ -28,7 +28,7 @@ def creer_admin():
             nom="Administrateur",
             identifiant=IDENTIFIANT_DEFAUT,
             mot_de_passe_hash=hash_password(MOT_DE_PASSE_DEFAUT),
-            role="admin",
+            role="super_admin",
         )
         db.add(admin)
         db.commit()

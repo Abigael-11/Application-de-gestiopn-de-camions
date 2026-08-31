@@ -9,8 +9,8 @@ from app.database import Base
 class Utilisateur(Base):
     """
     Compte permettant de se connecter à l'application.
-    Rôles possibles : 'operation' (saisit les états), 'direction' (consulte
-    uniquement), 'admin' (gère utilisateurs, camions et paramètres).
+    Rôles possibles (voir app/permissions.py) : 'super_admin', 'admin_transport',
+    'dispatcher', 'maintenance', 'gestionnaire_flotte', 'comptable'.
     """
     __tablename__ = "utilisateurs"
 
@@ -18,16 +18,16 @@ class Utilisateur(Base):
     nom = Column(String(100), nullable=False)
     identifiant = Column(String(50), unique=True, nullable=False)  # nom d'utilisateur pour se connecter
     mot_de_passe_hash = Column(String(255), nullable=False)
-    role = Column(String(20), nullable=False)  # 'operation' | 'direction' | 'admin'
+    role = Column(String(20), nullable=False)  # voir app/permissions.py -> ROLES_VALIDES
     actif = Column(Boolean, default=True)
     cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
-
 
 class Camion(Base):
     __tablename__ = "camions"
 
     id = Column(Integer, primary_key=True, index=True)
     immatriculation = Column(String(20), unique=True, nullable=False)
+    unit = Column(String(20), unique=True, nullable=True)  # identifiant court (ex: "083"), utilisé dans le GPS/Sheet d'origine
     marque = Column(String(50))
     modele = Column(String(50))
     capacite_tonnes = Column(Numeric)
@@ -38,6 +38,31 @@ class Camion(Base):
 
     historique = relationship("HistoriqueEtat", back_populates="camion")
 
+
+class Chauffeur(Base):
+    """
+    Fiche chauffeur. Un chauffeur peut être affecté à un camion (camion_id),
+    ou non affecté (camion_id = NULL, ex: en congé, en attente d'affectation).
+    """
+    __tablename__ = "chauffeurs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nom = Column(String(50), nullable=False)
+    prenom = Column(String(50), nullable=False)
+    telephone = Column(String(30), nullable=True)
+    adresse = Column(String(200), nullable=True)
+    numero_permis = Column(String(50), nullable=True)
+    categorie_permis = Column(String(10), nullable=True)
+    date_expiration_permis = Column(TIMESTAMP(timezone=True), nullable=True)
+    date_embauche = Column(TIMESTAMP(timezone=True), nullable=True)
+    contact_urgence_nom = Column(String(100), nullable=True)
+    contact_urgence_telephone = Column(String(30), nullable=True)
+    disponibilite = Column(String(20), default="disponible")  # disponible | en_mission | en_conge | indisponible
+    camion_id = Column(Integer, ForeignKey("camions.id"), nullable=True)
+    actif = Column(Boolean, default=True)
+    cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    camion = relationship("Camion")
 
 class EtatReference(Base):
     """
@@ -56,6 +81,8 @@ class EtatReference(Base):
     libelle = Column(String(100), nullable=False)             # ex: 'En panne'
     categorie = Column(String(30))                            # 'actif' | 'attente' | 'immobilisation'
     groupe = Column(String(60), nullable=True)                # ex: 'Transport / Déplacement'
+
+    categorie_dg = Column(String(40), nullable=True)  # 7 catégories du DG (Driving, Loading and offloading, Breakdown, Workshop empty/Loaded, Waiting fuel, Waiting for documents, Accident) -- indépendant de categorie/groupe
 
     historique = relationship("HistoriqueEtat", back_populates="etat")
 
@@ -92,3 +119,32 @@ Index(
     HistoriqueEtat.camion_id,
     postgresql_where=(HistoriqueEtat.date_fin.is_(None)),
 )
+
+
+
+class Mission(Base):
+    """
+    Une mission = un trajet planifié pour un camion, avec un client et une
+    marchandise. Distinct de HistoriqueEtat : une mission peut englober
+    plusieurs changements d'état (chargement, trajet, douane, livraison...).
+    """
+    __tablename__ = "missions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    client = Column(String(150), nullable=True)
+    marchandise = Column(String(150), nullable=True)
+    camion_id = Column(Integer, ForeignKey("camions.id"), nullable=True)
+    chauffeur_id = Column(Integer, ForeignKey("chauffeurs.id"), nullable=True)
+    lieu_depart = Column(String(150), nullable=True)
+    lieu_destination = Column(String(150), nullable=True)
+    distance_km = Column(Numeric, nullable=True)
+    date_depart_prevue = Column(TIMESTAMP(timezone=True), nullable=True)
+    date_arrivee_prevue = Column(TIMESTAMP(timezone=True), nullable=True)
+    date_depart_reelle = Column(TIMESTAMP(timezone=True), nullable=True)
+    date_arrivee_reelle = Column(TIMESTAMP(timezone=True), nullable=True)
+    statut = Column(String(20), default="planifiee")  # planifiee | en_cours | terminee | annulee
+    saisi_par = Column(String(100), nullable=True)
+    cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    camion = relationship("Camion")
+    chauffeur = relationship("Chauffeur")

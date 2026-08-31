@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Missions — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
+      <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" href="index.html">▦ Tableau de bord</a>
+    <a class="nav-item" href="missions.html">▤ Missions</a>
+    <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Missions</h1>
+        <p class="page-subtitle">Planification et suivi des missions de transport</p>
+      </div>
+
+<select id="filtreStatut" style="margin-right:10px;">
+        <option value="">Tous les statuts</option>
+        <option value="planifiee">Planifiée</option>
+        <option value="en_cours">En cours</option>
+        <option value="terminee">Terminée</option>
+        <option value="annulee">Annulée</option>
+      </select>
+      <button class="btn btn-primary" id="btnNouvelleMission">+ Nouvelle mission</button>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th><th>Marchandise</th><th>Camion</th><th>Chauffeur</th>
+            <th>Trajet</th><th>Départ prévu</th><th>Statut</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="missionsBody"><tr><td colspan="8"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Modal nouvelle/modifier mission -->
+<div class="modal-overlay" id="modalOverlayMission">
+  <div class="modal">
+    <h3 id="modalMissionTitre">Nouvelle mission</h3>
+    <p class="sub">Planifie ou met à jour une mission de transport.</p>
+    <div class="modal-error" id="modalErrorMission"></div>
+
+    <div class="field"><label for="mClient">Client</label><input type="text" id="mClient" placeholder="ex : Total Congo" /></div>
+    <div class="field"><label for="mMarchandise">Marchandise</label><input type="text" id="mMarchandise" placeholder="ex : Ciment" /></div>
+    <div class="field"><label for="mCamionId">Camion</label><select id="mCamionId"><option value="">— Aucun —</option></select></div>
+    <div class="field"><label for="mChauffeurId">Chauffeur</label><select id="mChauffeurId"><option value="">— Aucun —</option></select></div>
+    <div class="field"><label for="mLieuDepart">Lieu de départ</label><input type="text" id="mLieuDepart" placeholder="ex : Pointe-Noire" /></div>
+    <div class="field"><label for="mLieuDestination">Lieu de destination</label><input type="text" id="mLieuDestination" placeholder="ex : Bangui" /></div>
+    <div class="field"><label for="mDateDepartPrevue">Date de départ prévue</label><input type="datetime-local" id="mDateDepartPrevue" /></div>
+    <div class="field"><label for="mDateArriveePrevue">Date d'arrivée prévue</label><input type="datetime-local" id="mDateArriveePrevue" /></div>
+    <div class="field"><label for="mStatut">Statut</label>
+      <select id="mStatut">
+        <option value="planifiee">Planifiée</option>
+        <option value="en_cours">En cours</option>
+        <option value="terminee">Terminée</option>
+        <option value="annulee">Annulée</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelMission">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirmMission">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/missions.js"></script>
+
+</body>
+</html>

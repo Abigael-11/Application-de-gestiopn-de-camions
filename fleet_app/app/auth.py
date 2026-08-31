@@ -18,8 +18,7 @@ DUREE_TOKEN_HEURES = 12
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-ROLES_VALIDES = ("operation", "direction", "admin")
-
+ROLES_VALIDES = ("super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte", "comptable")
 
 # ---------- Mots de passe ----------
 

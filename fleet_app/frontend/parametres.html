@@ -2,9 +2,11 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Paramètres — Fleet Ops</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
 <style>
   .ptabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
   .ptab { padding-bottom: 10px; color: var(--text-secondary); font-size: 13.5px; cursor: pointer; border-bottom: 2px solid transparent; }
@@ -28,11 +30,12 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-icon">🚚</div>
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
       <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
     </div>
     <div class="nav-label">Navigation</div>
     <a class="nav-item" href="index.html">▦ Tableau de bord</a>
+<a class="nav-item" href="missions.html">▤ Missions</a>
     <a class="nav-item active" href="parametres.html">⚙ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
@@ -53,6 +56,7 @@
     <div class="ptabs">
       <div class="ptab active" data-panel="etats">États</div>
       <div class="ptab" data-panel="camions">Camions</div>
+      <div class="ptab" data-panel="chauffeurs">Chauffeurs</div>
       <div class="ptab" data-panel="utilisateurs">Utilisateurs</div>
       <div class="ptab" data-panel="seuils">Seuils d'alerte</div>
     </div>
@@ -65,7 +69,7 @@
       </div>
       <div class="table-card">
         <table>
-          <thead><tr><th>Nom de l'état</th><th>Groupe</th><th>Catégorie (calcul)</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Nom de l'état</th><th>Groupe</th><th>Catégorie (calcul)</th><th>Catégorie DG</th><th>Actions</th></tr></thead>
           <tbody id="etatsBody"><tr><td colspan="4"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
         </table>
       </div>
@@ -78,11 +82,25 @@
       </div>
       <div class="table-card">
         <table>
-          <thead><tr><th>Immatriculation</th><th>Flotte</th><th>Capacité</th><th>Chauffeur</th><th>Lien dossier externe</th><th>Statut</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Unit</th><th>Immatriculation</th><th>Flotte</th><th>Capacité</th><th>Chauffeur</th><th>Statut</th><th>Actions</th></tr></thead>
           <tbody id="camionsBody"><tr><td colspan="7"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
         </table>
       </div>
     </div>
+
+
+    <!-- Chauffeurs -->
+<div class="panel" id="panel-chauffeurs">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+    <button class="btn btn-primary" id="btnNouveauChauffeur">+ Ajouter un chauffeur</button>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead><tr><th>Nom</th><th>Téléphone</th><th>Permis</th><th>Expire le</th><th>Disponibilité</th><th>Camion affecté</th><th>Actions</th></tr></thead>
+      <tbody id="chauffeursBody"><tr><td colspan="7"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+    </table>
+  </div>
+</div>
 
     <!-- Utilisateurs -->
     <div class="panel" id="panel-utilisateurs">
@@ -127,14 +145,49 @@
     <div class="field">
       <label for="uRole">Rôle</label>
       <select id="uRole">
-        <option value="operation">Opération (peut changer les états)</option>
-        <option value="direction">Direction (consultation seule)</option>
-        <option value="admin">Admin (accès complet)</option>
+        <option value="super_admin">Super Administrateur</option>
+        <option value="admin_transport">Administrateur Transport</option>
+        <option value="dispatcher">Exploitant / Dispatcher</option>
+        <option value="maintenance">Responsable Maintenance</option>
+        <option value="gestionnaire_flotte">Gestionnaire de Flotte</option>
+        <option value="comptable">Comptable</option>
+              
       </select>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancelUser">Annuler</button>
       <button class="btn btn-primary" id="btnConfirmUser">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Modal nouveau/modifier chauffeur -->
+<div class="modal-overlay" id="modalOverlayChauffeur">
+  <div class="modal">
+    <h3 id="modalChauffeurTitre">Nouveau chauffeur</h3>
+    <p class="sub">Fiche du chauffeur.</p>
+    <div class="modal-error" id="modalErrorChauffeur"></div>
+    <div class="field"><label for="chNom">Nom</label><input type="text" id="chNom" /></div>
+    <div class="field"><label for="chPrenom">Prénom</label><input type="text" id="chPrenom" /></div>
+    <div class="field"><label for="chTelephone">Téléphone</label><input type="text" id="chTelephone" placeholder="ex : 06xxxxxxxx" /></div>
+    <div class="field"><label for="chNumPermis">Numéro de permis</label><input type="text" id="chNumPermis" /></div>
+    <div class="field"><label for="chCatPermis">Catégorie de permis</label><input type="text" id="chCatPermis" placeholder="ex : C, CE" /></div>
+    <div class="field"><label for="chExpirationPermis">Date d'expiration du permis</label><input type="date" id="chExpirationPermis" /></div>
+    <div class="field">
+      <label for="chDispo">Disponibilité</label>
+      <select id="chDispo">
+        <option value="disponible">Disponible</option>
+        <option value="en_mission">En mission</option>
+        <option value="en_conge">En congé</option>
+        <option value="indisponible">Indisponible</option>
+      </select>
+    </div>
+    <div class="field"><label for="chCamionId">Camion affecté (optionnel)</label><select id="chCamionId"><option value="">— Aucun —</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelChauffeur">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirmChauffeur">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -161,10 +214,20 @@
     </div>
     <div class="field">
       <label for="eCategorie">Catégorie (pilote le calcul du taux d'occupation)</label>
-      <select id="eCategorie">
-        <option value="actif">Actif</option>
-        <option value="attente">Attente</option>
-        <option value="immobilisation">Immobilisation</option>
+      
+      <div class="field">
+        <label for="eCategorieDg">Fleet Activity(7 catégories)</label>
+        <select id="eCategorieDg">
+          <option value="">— Non classé —</option>
+          <option value="Driving">Driving</option>
+          <option value="Loading and offloading">Loading and offloading</option>
+          <option value="Breakdown">Breakdown</option>
+          <option value="Workshop empty/Loaded">Workshop empty/Loaded</option>
+          <option value="Waiting fuel">Waiting fuel</option>
+          <option value="Waiting for documents">Waiting for documents</option>
+          <option value="Accident">Accident</option>
+        </select>
+      </div>
       </select>
     </div>
     <div class="modal-actions">
@@ -180,7 +243,8 @@
     <h3>Modifier le camion</h3>
     <p class="sub" id="modalSub"></p>
     <div class="modal-error" id="modalError"></div>
-    <div class="field"><label for="fChauffeur">Chauffeur assigné</label><input type="text" id="fChauffeur" placeholder="ex : Paul Ondimba" /></div>
+    <div class="field"><label for="fUnit">Unit</label><input type="text" id="fUnit" placeholder="ex : 083" /></div>
+    <div class="field"><label for="fChauffeur">Chauffeur assigné</label><input type="text" id="fChauffeur" placeholder="ex : Paul Ondimba" /></div> 
     <div class="field"><label for="fLien">Lien vers le dossier externe (GPS, rapports…)</label><input type="text" id="fLien" placeholder="https://…" /></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancel">Annuler</button>
@@ -195,6 +259,7 @@
     <h3>Nouveau camion</h3>
     <p class="sub">Enregistre un nouveau camion dans la flotte.</p>
     <div class="modal-error" id="modalErrorCamion"></div>
+    <div class="field"><label for="fUnit">Unit (identifiant court, ex : 083)</label><input type="text" id="cUnit" placeholder="ex : 083" /></div>
     <div class="field"><label for="cImmat">Immatriculation</label><input type="text" id="cImmat" placeholder="ex : CIMAF-140" /></div>
     <div class="field"><label for="cMarque">Flotte / Marque</label><input type="text" id="cMarque" placeholder="ex : CIMAF, Flatbed…" /></div>
     <div class="field"><label for="cCapacite">Capacité (tonnes)</label><input type="number" id="cCapacite" placeholder="ex : 30" /></div>

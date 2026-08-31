@@ -210,3 +210,192 @@ def get_duree_moyenne_par_etat(db: Session, camion_id: int = None, depuis: datet
         )
         for r in resultats
     ]
+
+def get_repartition_categorie_dg(db: Session, camion_id: int = None, depuis: datetime = None):
+    """
+    Temps total (en heures) passé dans chaque categorie_dg (les 7 catégories
+    demandées par le DG : Driving, Loading and offloading, Breakdown, etc.).
+    Les périodes en cours (date_fin NULL) comptent jusqu'à maintenant.
+    """
+    fin_effective = func.coalesce(models.HistoriqueEtat.date_fin, func.now())
+    duree_expr = func.extract(
+        "epoch", fin_effective - models.HistoriqueEtat.date_debut
+    ) / 3600.0
+
+    query = (
+        db.query(
+            models.EtatReference.categorie_dg.label("categorie_dg"),
+            func.sum(duree_expr).label("duree_totale_heures"),
+        )
+        .join(models.HistoriqueEtat, models.HistoriqueEtat.etat_id == models.EtatReference.id)
+        .filter(models.EtatReference.categorie_dg.isnot(None))
+    )
+
+    if camion_id:
+        query = query.filter(models.HistoriqueEtat.camion_id == camion_id)
+    if depuis:
+        query = query.filter(models.HistoriqueEtat.date_debut >= depuis)
+
+    resultats = query.group_by(models.EtatReference.categorie_dg).all()
+
+    return [
+        schemas.RepartitionCategorieDg(
+            categorie_dg=r.categorie_dg,
+            duree_totale_heures=round(r.duree_totale_heures or 0, 1),
+        )
+        for r in resultats
+    ]
+
+def list_chauffeurs(db: Session, inclure_inactifs: bool = False):
+    query = db.query(models.Chauffeur)
+    if not inclure_inactifs:
+        query = query.filter(models.Chauffeur.actif == True)  # noqa: E712
+    return query.all()
+
+
+def create_chauffeur(db: Session, chauffeur: schemas.ChauffeurCreate) -> models.Chauffeur:
+    db_chauffeur = models.Chauffeur(**chauffeur.model_dump())
+    db.add(db_chauffeur)
+    db.commit()
+    db.refresh(db_chauffeur)
+    return db_chauffeur
+
+
+def update_chauffeur(db: Session, chauffeur_id: int, updates: schemas.ChauffeurUpdate) -> models.Chauffeur:
+    chauffeur = db.query(models.Chauffeur).filter(models.Chauffeur.id == chauffeur_id).first()
+    if not chauffeur:
+        raise HTTPException(status_code=404, detail="Chauffeur introuvable")
+    for champ, valeur in updates.model_dump(exclude_unset=True).items():
+        setattr(chauffeur, champ, valeur)
+    db.commit()
+    db.refresh(chauffeur)
+
+    # Si on vient d'affecter ce chauffeur à un camion, on synchronise
+    # le champ chauffeur_actuel du camion pour que le tableau de bord reste cohérent
+    if chauffeur.camion_id:
+        camion = db.query(models.Camion).filter(models.Camion.id == chauffeur.camion_id).first()
+        if camion:
+            camion.chauffeur_actuel = f"{chauffeur.prenom} {chauffeur.nom}"
+            db.commit()
+    return chauffeur
+
+
+def list_missions(db: Session, statut: str = None):
+    query = db.query(models.Mission)
+    if statut:
+        query = query.filter(models.Mission.statut == statut)
+    return query.order_by(models.Mission.date_depart_prevue.desc().nullslast()).all()
+
+
+def create_mission(db: Session, mission: schemas.MissionCreate) -> models.Mission:
+    db_mission = models.Mission(**mission.model_dump())
+    db.add(db_mission)
+    db.commit()
+    db.refresh(db_mission)
+    return db_mission
+
+
+def update_mission(db: Session, mission_id: int, updates: schemas.MissionUpdate) -> models.Mission:
+    mission = db.query(models.Mission).filter(models.Mission.id == mission_id).first()
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    for champ, valeur in updates.model_dump(exclude_unset=True).items():
+        setattr(mission, champ, valeur)
+    db.commit()
+    db.refresh(mission)
+    return mission
+
+
+def supprimer_mission(db: Session, mission_id: int):
+    mission = db.query(models.Mission).filter(models.Mission.id == mission_id).first()
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.statut != "planifiee":
+        raise HTTPException(
+            status_code=400,
+            detail="Seule une mission encore 'planifiée' (pas commencée) peut être supprimée. Annulez-la plutôt.",
+        )
+    db.delete(mission)
+    db.commit()
+
+
+
+def get_repartition_categorie_dg(db: Session, camion_id: int = None, depuis: datetime = None):
+    """
+    Ventile le temps par les 7 categories DG (Driving, Loading and offloading,
+    Breakdown, Workshop empty/Loaded, Waiting fuel, Waiting for documents,
+    Accident), a partir des memes donnees que get_duree_moyenne_par_etat.
+    """
+    duree_expr = func.extract(
+        "epoch", models.HistoriqueEtat.date_fin - models.HistoriqueEtat.date_debut
+    ) / 3600.0
+
+    query = (
+        db.query(
+            models.EtatReference.categorie_dg.label("categorie_dg"),
+            func.sum(duree_expr).label("duree_totale_heures"),
+            func.count(models.HistoriqueEtat.id).label("nombre_occurrences"),
+        )
+        .join(models.HistoriqueEtat, models.HistoriqueEtat.etat_id == models.EtatReference.id)
+        .filter(models.HistoriqueEtat.date_fin.isnot(None))
+        .filter(models.EtatReference.categorie_dg.isnot(None))
+    )
+
+    if camion_id:
+        query = query.filter(models.HistoriqueEtat.camion_id == camion_id)
+    if depuis:
+        query = query.filter(models.HistoriqueEtat.date_debut >= depuis)
+
+    resultats = query.group_by(models.EtatReference.categorie_dg).all()
+
+    return [
+        {
+            "categorie_dg": r.categorie_dg,
+            "duree_totale_heures": round(r.duree_totale_heures or 0, 1),
+            "nombre_occurrences": r.nombre_occurrences,
+        }
+        for r in resultats
+    ]
+
+
+def supprimer_camion_definitif(db: Session, camion_id: int):
+    """
+    Suppression DÉFINITIVE et IRRÉVERSIBLE d'un camion, réservée à super_admin.
+    Supprime tout l'historique lié (perte de traçabilité assumée).
+    Détache (camion_id = NULL) les missions et chauffeurs liés plutôt que
+    de les supprimer eux aussi.
+    """
+    camion = get_camion(db, camion_id)
+    if not camion:
+        raise HTTPException(status_code=404, detail="Camion introuvable")
+
+    db.query(models.HistoriqueEtat).filter(
+        models.HistoriqueEtat.camion_id == camion_id
+    ).delete()
+
+    db.query(models.Mission).filter(
+        models.Mission.camion_id == camion_id
+    ).update({"camion_id": None})
+
+    db.query(models.Chauffeur).filter(
+        models.Chauffeur.camion_id == camion_id
+    ).update({"camion_id": None})
+
+    db.delete(camion)
+    db.commit()
+
+
+def supprimer_utilisateur_definitif(db: Session, utilisateur_id: int):
+    """
+    Suppression DÉFINITIVE d'un utilisateur, réservée à super_admin.
+    saisi_par est un champ texte libre (pas de clé étrangère) : aucune
+    cascade n'est nécessaire, l'historique et les missions déjà saisis
+    restent inchangés, simplement sans compte actif associé.
+    """
+    utilisateur = db.query(models.Utilisateur).filter(
+        models.Utilisateur.id == utilisateur_id
+    ).first()
+    if not utilisateur:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+    db.delete(utilisateur)
+    db.commit()

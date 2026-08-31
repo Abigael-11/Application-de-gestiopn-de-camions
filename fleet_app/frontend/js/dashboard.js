@@ -145,7 +145,7 @@ function render() {
         <td>—</td>
         <td>
           <div class="row-actions">
-            ${session.getRole() !== "direction" ? `<button class="btn btn-primary btn-sm" onclick="openModal(${c.camion.id}, '${escapeHtml(c.camion.immatriculation)}')">↻ Changer l'état</button>` : ""}
+            ${["super_admin", "admin_transport", "dispatcher", "maintenance"].includes(session.getRole()) ? `<button class="btn btn-primary btn-sm" onclick="openModal(${c.camion.id}, '${escapeHtml(c.camion.immatriculation)}')">↻ Changer l'état</button>` : ""}
             <a class="btn btn-secondary btn-sm" href="camion.html?id=${c.camion.id}">Traçabilité</a>
           </div>
         </td>

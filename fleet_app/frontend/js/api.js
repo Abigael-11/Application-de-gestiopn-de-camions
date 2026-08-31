@@ -64,20 +64,35 @@ const api = {
   historique: (id, depuisJours) =>
     apiFetch(`/camions/${id}/historique${depuisJours ? `?depuis_jours=${depuisJours}` : ""}`),
   listEtats: () => apiFetch("/etats/"),
+  repartitionCategorieDg: (camionId, derniersJours) => apiFetch(`/stats/repartition-categorie-dg?derniers_jours=${derniersJours || 30}` + (camionId ? `&camion_id=${camionId}` : "")),
   createEtat: (payload) =>
     apiFetch("/etats/", { method: "POST", body: JSON.stringify(payload) }),
   updateEtat: (id, payload) =>
     apiFetch(`/etats/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   dureeMoyenne: (camionId, derniersJours) =>
-    apiFetch(
-      `/stats/duree-moyenne?derniers_jours=${derniersJours || 30}` +
-      (camionId ? `&camion_id=${camionId}` : "")
-    ),
+    apiFetch( `/stats/duree-moyenne?derniers_jours=${derniersJours || 30}` +
+      (camionId ? `&camion_id=${camionId}` : "")), 
   listUtilisateurs: () => apiFetch("/utilisateurs/"),
   createUtilisateur: (payload) =>
     apiFetch("/utilisateurs/", { method: "POST", body: JSON.stringify(payload) }),
   desactiverUtilisateur: (id) =>
     apiFetch(`/utilisateurs/${id}/desactiver`, { method: "PATCH" }),
+  reactiverUtilisateur: (id) =>
+    apiFetch(`/utilisateurs/${id}/reactiver`, { method: "PATCH" }),
+  changerRoleUtilisateur: (id, role) =>
+    apiFetch(`/utilisateurs/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
+  deleteCamionDefinitif: (id) => apiFetch(`/camions/${id}/definitif`, { method: "DELETE" }),
+  deleteUtilisateurDefinitif: (id) => apiFetch(`/utilisateurs/${id}/definitif`, { method: "DELETE" }),
+  
+  listChauffeurs: (inclureInactifs) => apiFetch(`/chauffeurs/${inclureInactifs ? "?inclure_inactifs=true" : ""}`),
+  createChauffeur: (payload) => apiFetch("/chauffeurs/", { method: "POST", body: JSON.stringify(payload) }),
+  updateChauffeur: (id, payload) => apiFetch(`/chauffeurs/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+
+  // Missions
+  listMissions: (statut) => apiFetch("/missions/" + (statut ? "?statut=" + statut : "")),
+  createMission: (payload) => apiFetch("/missions/", { method: "POST", body: JSON.stringify(payload) }),
+  updateMission: (id, payload) => apiFetch(`/missions/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  supprimerMission: (id) => apiFetch(`/missions/${id}`, { method: "DELETE" }),
 };
 
 /* ---------- Aides communes ---------- */

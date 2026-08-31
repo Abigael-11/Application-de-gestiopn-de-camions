@@ -4,17 +4,20 @@ let camionEnEdition = null;
 async function init() {
   if (!requireAuth()) return;
   const role = session.getRole();
-  if (role !== "admin" && role !== "operation") {
+  if (role === "comptable") {
     window.location.href = "index.html";
     return;
   }
   initSidebarSession();
 
-  // L'équipe opération ne gère que les camions -- les autres onglets
-  // (États, Utilisateurs, Seuils) restent réservés à l'admin.
-  if (role === "operation") {
+  el("btnNouveauChauffeur").addEventListener("click", ouvrirNouveauChauffeur);
+  el("btnCancelChauffeur").addEventListener("click", closeModalChauffeur);
+  el("modalOverlayChauffeur").addEventListener("click", (e) => { if (e.target.id === "modalOverlayChauffeur") closeModalChauffeur(); });
+  el("btnConfirmChauffeur").addEventListener("click", enregistrerChauffeur);
+
+  if (role !== "super_admin") {
     document.querySelectorAll('.ptab').forEach((tab) => {
-      if (tab.dataset.panel !== "camions") tab.style.display = "none";
+      if (tab.dataset.panel !== "camions" && tab.dataset.panel !== "chauffeurs") tab.style.display = "none";  
     });
     document.querySelectorAll('.ptab').forEach((t) => t.classList.remove("active"));
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove("active"));
@@ -51,7 +54,8 @@ async function init() {
   el("btnConfirmEtat").addEventListener("click", enregistrerEtat);
 
   await loadCamions();
-  if (role === "admin") {
+  await loadChauffeurs();
+  if (role === "super_admin") {
     initSeuil();
     await loadEtats();
     await loadUtilisateurs();
@@ -69,6 +73,7 @@ async function loadEtats() {
         <td>${escapeHtml(e.libelle)}<div style="font-size:11px;color:var(--text-muted);">${escapeHtml(e.code)}</div></td>
         <td>${escapeHtml(e.groupe || "—")}</td>
         <td><span class="status-pill status-${e.categorie}">${CATEGORIE_LABEL[e.categorie] || e.categorie}</span></td>
+        <td>${escapeHtml(e.categorie_dg || "—")}</td>
         <td><button class="btn btn-secondary btn-sm" onclick='ouvrirEditionEtat(${JSON.stringify(e)})'>✎ Modifier</button></td>
       </tr>
     `).join("");
@@ -81,6 +86,7 @@ function ouvrirNouvelEtat() {
   etatEnEdition = null;
   el("modalEtatTitre").textContent = "Nouvel état";
   el("eCode").value = "";
+  el("eCategorieDg").value = "";
   el("eCode").disabled = false;
   el("eLibelle").value = "";
   el("eGroupe").value = "Deplacement";
@@ -95,6 +101,7 @@ function ouvrirEditionEtat(etat) {
   el("eCode").value = etat.code;
   el("eCode").disabled = true; // le code est la clé technique, non modifiable
   el("eLibelle").value = etat.libelle;
+  el("eCategorieDg").value = etat.categorie_dg || "";
   el("eGroupe").value = etat.groupe || "Autre";
   el("eCategorie").value = etat.categorie;
   el("modalErrorEtat").style.display = "none";
@@ -111,25 +118,32 @@ async function enregistrerEtat() {
   const libelle = el("eLibelle").value.trim();
   const code = el("eCode").value.trim();
   if (!libelle || !code) {
-    errBox.textContent = "Le code et le libellé sont obligatoires.";
+    errBox.textContent = "Le code et le libelle sont obligatoires.";
     errBox.style.display = "block";
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = "Enregistrement…";
+  btn.textContent = "Enregistrement...";
   try {
     if (etatEnEdition) {
       await api.updateEtat(etatEnEdition.id, {
-        libelle, groupe: el("eGroupe").value, categorie: el("eCategorie").value,
+        libelle: libelle,
+        groupe: el("eGroupe").value,
+        categorie: el("eCategorie").value,
+        categorie_dg: el("eCategorieDg").value || null,
       });
     } else {
       await api.createEtat({
-        code, libelle, groupe: el("eGroupe").value, categorie: el("eCategorie").value,
+        code: code,
+        libelle: libelle,
+        groupe: el("eGroupe").value,
+        categorie: el("eCategorie").value,
+        categorie_dg: el("eCategorieDg").value || null,
       });
     }
     closeModalEtat();
-    showToast(etatEnEdition ? "État mis à jour." : "État créé avec succès.");
+    showToast(etatEnEdition ? "Etat mis a jour." : "Etat cree avec succes.");
     await loadEtats();
   } catch (err) {
     errBox.textContent = err.message;
@@ -148,21 +162,21 @@ async function loadCamions() {
       return;
     }
     el("camionsBody").innerHTML = camions.map((c) => `
-      <tr style="${!c.camion.actif ? 'opacity:0.5;' : ''}">
-        <td><strong>${escapeHtml(c.camion.immatriculation)}</strong></td>
-        <td>${escapeHtml(c.camion.marque || "—")}</td>
-        <td>${c.camion.capacite_tonnes ? c.camion.capacite_tonnes + "t" : "—"}</td>
-        <td>${escapeHtml(c.camion.chauffeur_actuel || "—")}</td>
-        <td class="link-cell" title="${escapeHtml(c.camion.lien_dossier_externe || "")}">${c.camion.lien_dossier_externe ? escapeHtml(c.camion.lien_dossier_externe) : "—"}</td>
-        <td>${c.camion.actif ? '<span style="color:var(--actif)">Actif</span>' : '<span style="color:var(--text-muted)">Désactivé</span>'}</td>
-        <td>
-          <div class="row-actions">
-            <button class="btn btn-secondary btn-sm" onclick='ouvrirEdition(${JSON.stringify(c.camion)})'>✎ Modifier</button>
-            <button class="btn btn-secondary btn-sm" onclick="toggleActifCamion(${c.camion.id}, ${c.camion.actif})">${c.camion.actif ? "Désactiver" : "Réactiver"}</button>
-            <button class="btn btn-secondary btn-sm" style="color:var(--immob);" onclick="supprimerCamion(${c.camion.id}, '${escapeHtml(c.camion.immatriculation)}')">🗑</button>
-          </div>
-        </td>
-      </tr>
+    <tr style="${!c.camion.actif ? 'opacity:0.5;' : ''}">
+      <td><strong>${escapeHtml(c.camion.unit || "—")}</strong></td>
+      <td>${escapeHtml(c.camion.immatriculation)}</td>
+      <td>${escapeHtml(c.camion.marque || "—")}</td>
+      <td>${c.camion.capacite_tonnes ? c.camion.capacite_tonnes + "t" : "—"}</td>
+      <td>${escapeHtml(c.camion.chauffeur_actuel || "—")}</td>
+      <td>${c.camion.actif ? '<span style="color:var(--actif)">Actif</span>' : '<span style="color:var(--text-muted)">Désactivé</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-secondary btn-sm" onclick='ouvrirEdition(${JSON.stringify(c.camion)})'>✎ Modifier</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleActifCamion(${c.camion.id}, ${c.camion.actif})">${c.camion.actif ? "Désactiver" : "Réactiver"}</button>
+          ${session.getRole() === "super_admin" ? `<button class="btn btn-secondary btn-sm" style="color:var(--immob);font-weight:600;" onclick="supprimerCamionDefinitif(${c.camion.id}, '${escapeHtml(c.camion.immatriculation)}')">🗑 Définitif</button>` : ""}
+        </div>
+      </td>
+    </tr> 
     `).join("");
   } catch (err) {
     showConnError(err);
@@ -186,7 +200,21 @@ async function supprimerCamion(id, immatriculation) {
     showToast("Camion supprimé.");
     await loadCamions();
   } catch (err) {
-    // Cas fréquent : le backend refuse car un historique existe -- on le dit clairement
+    showToast(err.message, true);
+  }
+}
+
+async function supprimerCamionDefinitif(id, immatriculation) {
+  const saisie = prompt(`ATTENTION : suppression DÉFINITIVE et IRRÉVERSIBLE de ${immatriculation}, y compris tout son historique.\nTapez l'immatriculation exacte pour confirmer :`);
+  if (saisie !== immatriculation) {
+    if (saisie !== null) showToast("Confirmation incorrecte, suppression annulée.", true);
+    return;
+  }
+  try {
+    await api.deleteCamionDefinitif(id);
+    showToast("Camion et historique supprimés définitivement.");
+    await loadCamions();
+  } catch (err) {
     showToast(err.message, true);
   }
 }
@@ -201,6 +229,7 @@ function ouvrirEdition(camion) {
   el("modalSub").textContent = `Camion ${camion.immatriculation}`;
   el("fChauffeur").value = camion.chauffeur_actuel || "";
   el("fLien").value = camion.lien_dossier_externe || "";
+  el("fUnit").value = camion.unit || "";
   el("modalError").style.display = "none";
   el("modalOverlay").classList.add("open");
 }
@@ -212,6 +241,7 @@ async function enregistrerLien() {
   btn.textContent = "Enregistrement…";
   try {
     await api.updateCamion(camionEnEdition.id, {
+      unit: el("fUnit").value || null,
       lien_dossier_externe: el("fLien").value || null,
       chauffeur_actuel: el("fChauffeur").value || null,
     });
@@ -230,6 +260,7 @@ async function enregistrerLien() {
 /* ---------- Nouveau camion ---------- */
 function ouvrirNouveauCamion() {
   el("cImmat").value = "";
+  el("cUnit").value = "";
   el("cMarque").value = "";
   el("cCapacite").value = "";
   el("cChauffeur").value = "";
@@ -241,6 +272,7 @@ function closeModalCamion() { el("modalOverlayCamion").classList.remove("open");
 async function enregistrerNouveauCamion() {
   const btn = el("btnConfirmCamion");
   const errBox = el("modalErrorCamion");
+  
   errBox.style.display = "none";
 
   const immatriculation = el("cImmat").value.trim();
@@ -255,6 +287,7 @@ async function enregistrerNouveauCamion() {
   try {
     await api.createCamion({
       immatriculation,
+      unit: el("cUnit").value || null,
       marque: el("cMarque").value || null,
       capacite_tonnes: el("cCapacite").value ? parseFloat(el("cCapacite").value) : null,
       chauffeur_actuel: el("cChauffeur").value || null,
@@ -273,22 +306,65 @@ async function enregistrerNouveauCamion() {
 
 /* ---------- Utilisateurs ---------- */
 
-const ROLE_LABEL_PARAM = { operation: "Opération", direction: "Direction", admin: "Admin" };
+const ROLE_LABEL_PARAM = {
+  super_admin: "Super Administrateur",
+  admin_transport: "Administrateur Transport",
+  dispatcher: "Exploitant / Dispatcher",
+  maintenance: "Responsable Maintenance",
+  gestionnaire_flotte: "Gestionnaire de Flotte",
+  comptable: "Comptable",
+};
+const ROLE_COULEUR_PARAM = {
+  super_admin: "immobilisation",
+  admin_transport: "immobilisation",
+  dispatcher: "attente",
+  maintenance: "attente",
+  gestionnaire_flotte: "attente",
+  comptable: "actif",
+};
 
 async function loadUtilisateurs() {
   try {
     const utilisateurs = await api.listUtilisateurs();
-    el("utilisateursBody").innerHTML = utilisateurs.map((u) => `
+    el("utilisateursBody").innerHTML = utilisateurs.map((u) => {
+      const estMoi = u.identifiant === session.getIdentifiant();
+      const optionsRole = Object.keys(ROLE_LABEL_PARAM).map((r) =>
+        `<option value="${r}" ${r === u.role ? "selected" : ""}>${ROLE_LABEL_PARAM[r]}</option>`
+      ).join("");
+      return `
       <tr>
-        <td><strong>${escapeHtml(u.nom)}</strong>${u.identifiant === session.getIdentifiant() ? ' <span style="color:var(--text-muted);font-size:11px;">(vous)</span>' : ""}</td>
+        <td><strong>${escapeHtml(u.nom)}</strong>${estMoi ? ' <span style="color:var(--text-muted);font-size:11px;">(vous)</span>' : ""}</td>
         <td>${escapeHtml(u.identifiant)}</td>
-        <td><span class="status-pill status-${u.role === "admin" ? "immobilisation" : u.role === "direction" ? "attente" : "actif"}">${ROLE_LABEL_PARAM[u.role] || u.role}</span></td>
+        <td>
+          ${estMoi
+            ? `<span class="status-pill status-${ROLE_COULEUR_PARAM[u.role] || "actif"}">${ROLE_LABEL_PARAM[u.role] || u.role}</span>`
+            : `<select onchange="changerRoleUtilisateur(${u.id}, this.value)" style="font-size:12px;padding:4px 6px;">${optionsRole}</select>`}
+        </td>
         <td>${u.actif ? '<span style="color:var(--actif)">Actif</span>' : '<span style="color:var(--text-muted)">Désactivé</span>'}</td>
-       <td>${u.actif && u.identifiant !== session.getIdentifiant() ? `<button class="btn btn-secondary btn-sm" onclick="desactiverUtilisateur(${u.id})">Désactiver</button>` : (!u.actif ? `<button class="btn btn-secondary btn-sm" onclick="reactiverUtilisateur(${u.id})">Réactiver</button>` : "—")}</td>
+        <td>
+          ${u.actif && !estMoi ? `<button class="btn btn-secondary btn-sm" onclick="desactiverUtilisateur(${u.id})">Désactiver</button>` : (!u.actif ? `<button class="btn btn-secondary btn-sm" onclick="reactiverUtilisateur(${u.id})">Réactiver</button>` : "—")}
+          ${session.getRole() === "super_admin" && !estMoi ? `<button class="btn btn-secondary btn-sm" style="color:var(--immob);font-weight:600;" onclick="supprimerUtilisateurDefinitif(${u.id}, '${escapeHtml(u.identifiant)}')">🗑 Définitif</button>` : ""}
+        </td>
       </tr>
-    `).join("");
+    `;
+    }).join("");
   } catch (err) {
     showConnError(err);
+  }
+}
+
+async function changerRoleUtilisateur(id, role) {
+  if (!confirm("Changer le rôle de cet utilisateur ?")) {
+    await loadUtilisateurs();
+    return;
+  }
+  try {
+    await api.changerRoleUtilisateur(id, role);
+    showToast("Rôle mis à jour.");
+    await loadUtilisateurs();
+  } catch (err) {
+    showToast(err.message, true);
+    await loadUtilisateurs();
   }
 }
 
@@ -343,11 +419,25 @@ async function desactiverUtilisateur(id) {
   }
 }
 
-
 async function reactiverUtilisateur(id) {
   try {
     await api.reactiverUtilisateur(id);
     showToast("Compte réactivé.");
+    await loadUtilisateurs();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+async function supprimerUtilisateurDefinitif(id, identifiant) {
+  const saisie = prompt(`ATTENTION : suppression DÉFINITIVE et IRRÉVERSIBLE du compte "${identifiant}".\nTapez l'identifiant exact pour confirmer :`);
+  if (saisie !== identifiant) {
+    if (saisie !== null) showToast("Confirmation incorrecte, suppression annulée.", true);
+    return;
+  }
+  try {
+    await api.deleteUtilisateurDefinitif(id);
+    showToast("Utilisateur supprimé définitivement.");
     await loadUtilisateurs();
   } catch (err) {
     showToast(err.message, true);
@@ -370,6 +460,149 @@ function initSeuil() {
 function updateSeuilDisplay(val) {
   el("seuilVal").textContent = val;
   el("seuilJours").textContent = (val / 24).toFixed(val % 24 === 0 ? 0 : 1);
+}
+
+/* ---------- Chauffeurs ---------- */
+let chauffeurEnEdition = null;
+
+async function loadChauffeurs() {
+  try {
+    const [chauffeurs, camions] = await Promise.all([api.listChauffeurs(true), api.listCamions(true)]);
+
+    // Remplit le menu déroulant "Camion affecté" du modal
+    const select = el("chCamionId");
+    select.innerHTML = '<option value="">— Aucun —</option>' +
+      camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.immatriculation)}</option>`).join("");
+
+    if (!chauffeurs.length) {
+      el("chauffeursBody").innerHTML = `<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:24px;">Aucun chauffeur enregistré pour l'instant.</td></tr>`;
+      return;
+    }
+
+    el("chauffeursBody").innerHTML = chauffeurs.map((ch) => {
+      const camion = camions.find((c) => c.camion.id === ch.camion_id);
+      const expiresBientot = ch.date_expiration_permis && (new Date(ch.date_expiration_permis) - new Date()) / 86400000 < 30;
+      return `
+        <tr style="${!ch.actif ? 'opacity:0.5;' : ''}">
+          <td><strong>${escapeHtml(ch.prenom)} ${escapeHtml(ch.nom)}</strong></td>
+          <td>${escapeHtml(ch.telephone || "—")}</td>
+          <td>${escapeHtml(ch.numero_permis || "—")}${ch.categorie_permis ? " (" + escapeHtml(ch.categorie_permis) + ")" : ""}</td>
+          <td style="${expiresBientot ? 'color:var(--immob);font-weight:600;' : ''}">${ch.date_expiration_permis ? new Date(ch.date_expiration_permis).toLocaleDateString("fr-FR") : "—"}${expiresBientot ? " ⚠" : ""}</td>
+          <td>${escapeHtml(ch.disponibilite || "—")}</td>
+          <td>${camion ? escapeHtml(camion.camion.immatriculation) : "—"}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-secondary btn-sm" onclick='ouvrirEditionChauffeur(${JSON.stringify(ch)})'>✎ Modifier</button>
+              <button class="btn btn-secondary btn-sm" onclick="toggleActifChauffeur(${ch.id}, ${ch.actif})">${ch.actif ? "Désactiver" : "Réactiver"}</button>
+              ${session.getRole() === "super_admin" ? `<button class="btn btn-secondary btn-sm" style="color:var(--immob);font-weight:600;" onclick="supprimerChauffeurDefinitif(${ch.id}, '${escapeHtml(ch.prenom)} ${escapeHtml(ch.nom)}')">🗑 Définitif</button>` : ""}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    showConnError(err);
+  }
+}
+
+async function toggleActifChauffeur(id, actifActuel) {
+  try {
+    await api.updateChauffeur(id, { actif: !actifActuel });
+    showToast(actifActuel ? "Chauffeur désactivé." : "Chauffeur réactivé.");
+    await loadChauffeurs();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+async function supprimerChauffeurDefinitif(id, nomComplet) {
+  const saisie = prompt(`ATTENTION : suppression DÉFINITIVE et IRRÉVERSIBLE du chauffeur "${nomComplet}".\nTapez son nom complet exact pour confirmer :`);
+  if (saisie !== nomComplet) {
+    if (saisie !== null) showToast("Confirmation incorrecte, suppression annulée.", true);
+    return;
+  }
+  try {
+    await api.deleteChauffeurDefinitif(id);
+    showToast("Chauffeur supprimé définitivement.");
+    await loadChauffeurs();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function ouvrirNouveauChauffeur() {
+  chauffeurEnEdition = null;
+  el("modalChauffeurTitre").textContent = "Nouveau chauffeur";
+  el("chNom").value = "";
+  el("chPrenom").value = "";
+  el("chTelephone").value = "";
+  el("chNumPermis").value = "";
+  el("chCatPermis").value = "";
+  el("chExpirationPermis").value = "";
+  el("chDispo").value = "disponible";
+  el("chCamionId").value = "";
+  el("modalErrorChauffeur").style.display = "none";
+  el("modalOverlayChauffeur").classList.add("open");
+}
+
+function ouvrirEditionChauffeur(ch) {
+  chauffeurEnEdition = ch;
+  el("modalChauffeurTitre").textContent = `Modifier — ${ch.prenom} ${ch.nom}`;
+  el("chNom").value = ch.nom;
+  el("chPrenom").value = ch.prenom;
+  el("chTelephone").value = ch.telephone || "";
+  el("chNumPermis").value = ch.numero_permis || "";
+  el("chCatPermis").value = ch.categorie_permis || "";
+  el("chExpirationPermis").value = ch.date_expiration_permis ? ch.date_expiration_permis.slice(0, 10) : "";
+  el("chDispo").value = ch.disponibilite || "disponible";
+  el("chCamionId").value = ch.camion_id || "";
+  el("modalErrorChauffeur").style.display = "none";
+  el("modalOverlayChauffeur").classList.add("open");
+}
+
+function closeModalChauffeur() { el("modalOverlayChauffeur").classList.remove("open"); }
+
+async function enregistrerChauffeur() {
+  const btn = el("btnConfirmChauffeur");
+  const errBox = el("modalErrorChauffeur");
+  errBox.style.display = "none";
+
+  const nom = el("chNom").value.trim();
+  const prenom = el("chPrenom").value.trim();
+  if (!nom || !prenom) {
+    errBox.textContent = "Le nom et le prénom sont obligatoires.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  const payload = {
+    nom, prenom,
+    telephone: el("chTelephone").value || null,
+    numero_permis: el("chNumPermis").value || null,
+    categorie_permis: el("chCatPermis").value || null,
+    date_expiration_permis: el("chExpirationPermis").value || null,
+    disponibilite: el("chDispo").value,
+    camion_id: el("chCamionId").value ? parseInt(el("chCamionId").value, 10) : null,
+  };
+
+  btn.disabled = true;
+  btn.textContent = "Enregistrement…";
+  try {
+    if (chauffeurEnEdition) {
+      await api.updateChauffeur(chauffeurEnEdition.id, payload);
+    } else {
+      await api.createChauffeur(payload);
+    }
+    closeModalChauffeur();
+    showToast(chauffeurEnEdition ? "Chauffeur mis à jour." : "Chauffeur créé avec succès.");
+    await loadChauffeurs();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Enregistrer";
+  }
 }
 
 init();

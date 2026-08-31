@@ -28,9 +28,10 @@ async function init() {
 async function loadAll() {
   el("connError").style.display = "none";
   try {
-    const [statut, historique] = await Promise.all([
+    const [statut, historique, repartitionDg] = await Promise.all([
       api.getCamion(camionId),
       api.historique(camionId, periodeJours),
+      api.repartitionCategorieDg(camionId, periodeJours),
     ]);
     el("bcCamion").textContent = statut.camion.immatriculation;
     el("titreImmat").textContent = statut.camion.immatriculation;
@@ -38,7 +39,7 @@ async function loadAll() {
 
     renderFrise(historique);
     renderTable(historique);
-    renderRecap(historique);
+    renderRepartitionDg(repartitionDg);
   } catch (err) {
     el("connError").style.display = "block";
     el("connError").innerHTML = `<strong>Erreur de chargement.</strong><br>${escapeHtml(err.message)}`;
@@ -97,35 +98,50 @@ function renderTable(historique) {
   }).join("");
 }
 
-function renderRecap(historique) {
-  const totaux = { actif: 0, attente: 0, immobilisation: 0 };
-  historique.forEach((h) => {
-    const fin = h.date_fin ? new Date(h.date_fin) : new Date();
-    const heures = (fin - new Date(h.date_debut)) / 3600000;
-    totaux[h.etat.categorie] = (totaux[h.etat.categorie] || 0) + heures;
-  });
-  const totalHeures = totaux.actif + totaux.attente + totaux.immobilisation;
+init();
 
-  const bar = el("recapBar");
-  bar.innerHTML = totalHeures > 0
-    ? ["actif", "attente", "immobilisation"].map((cat) => {
-        const pct = (totaux[cat] / totalHeures) * 100;
-        return pct > 0 ? `<div style="width:${pct}%;background:var(--${cat === "immobilisation" ? "immob" : cat})"></div>` : "";
-      }).join("")
-    : "";
+const COULEUR_CATEGORIE_DG = {
+  "Driving": "var(--dg-driving)",
+  "Loading and offloading": "var(--dg-loading)",
+  "Breakdown": "var(--dg-breakdown)",
+  "Workshop empty/Loaded": "var(--dg-workshop)",
+  "Waiting fuel": "var(--dg-fuel)",
+  "Waiting for documents": "var(--dg-docs)",
+  "Accident": "var(--dg-accident)",
+};
 
-  el("recapRows").innerHTML = ["actif", "attente", "immobilisation"].map((cat) => {
-    const pct = totalHeures > 0 ? (totaux[cat] / totalHeures) * 100 : 0;
+function renderRepartitionDg(repartition) {
+  const parCategorie = Object.fromEntries(repartition.map((r) => [r.categorie_dg, r]));
+  const total = repartition.reduce((s, r) => s + r.duree_totale_heures, 0);
+
+  if (!repartition.length || total === 0) {
+    el("dgRepartitionRows").innerHTML = `<div style="color:var(--text-muted);font-size:12.5px;">Aucune donnée sur cette période.</div>`;
+    el("tauxOccupation").textContent = "—";
+    return;
+  }
+
+  const ordre = ["Driving", "Loading and offloading", "Breakdown", "Workshop empty/Loaded", "Waiting fuel", "Waiting for documents", "Accident"];
+
+  el("dgRepartitionRows").innerHTML = ordre.map((cat) => {
+    const r = parCategorie[cat];
+    const heures = r ? r.duree_totale_heures : 0;
+    const pct = total > 0 ? (heures / total) * 100 : 0;
+    const couleur = COULEUR_CATEGORIE_DG[cat];
     return `
-      <div class="recap-row">
-        <span><span class="legend-dot" style="background:var(--${cat === "immobilisation" ? "immob" : cat})"></span>${CATEGORIE_LABEL[cat]}</span>
-        <span>${formatDuree(totaux[cat])} &nbsp; <strong>${pct.toFixed(0)}%</strong></span>
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;">
+          <span><span class="legend-dot" style="background:${couleur}"></span>${cat}</span>
+          <span>${formatDuree(heures)} · <strong>${pct.toFixed(0)}%</strong></span>
+        </div>
+        <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${couleur}"></div>
+        </div>
       </div>
     `;
   }).join("");
 
-  const tauxOccupation = totalHeures > 0 ? (totaux.actif / totalHeures) * 100 : null;
-  el("tauxOccupation").textContent = tauxOccupation === null ? "—" : tauxOccupation.toFixed(1) + " %";
+  const heuresProductif = (parCategorie["Driving"]?.duree_totale_heures || 0) +
+    (parCategorie["Loading and offloading"]?.duree_totale_heures || 0);
+  const tauxOccupation = (heuresProductif / total) * 100;
+  el("tauxOccupation").textContent = tauxOccupation.toFixed(1) + " %";
 }
-
-init();

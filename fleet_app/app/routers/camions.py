@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+from app import schemas, crud, auth, models
+from app import permissions as perms
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import List, Optional
@@ -16,8 +18,8 @@ LECTURE = Depends(auth.get_current_user)
 def creer_camion(
     camion: schemas.CamionCreate,
     db: Session = Depends(get_db),
-    _user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
-):
+    _user: models.Utilisateur = Depends(perms.require_permission("camions:creer")),
+):    
     return crud.create_camion(db, camion)
 
 
@@ -48,7 +50,7 @@ def modifier_camion(
     camion_id: int,
     updates: schemas.CamionUpdate,
     db: Session = Depends(get_db),
-    _user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
+   _user: models.Utilisateur = Depends(perms.require_permission("camions:modifier")),
 ):
     """
     Modifie les infos d'un camion -- utile notamment pour renseigner
@@ -62,7 +64,7 @@ def modifier_camion(
 def supprimer_camion(
     camion_id: int,
     db: Session = Depends(get_db),
-    _user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
+   _user: models.Utilisateur = Depends(perms.require_permission("camions:supprimer")),
 ):
     """
     Suppression définitive -- bloquée si le camion a un historique
@@ -72,20 +74,34 @@ def supprimer_camion(
     return {"detail": "Camion supprimé."}
 
 
+@router.delete("/{camion_id}/definitif")
+def supprimer_camion_definitif_endpoint(
+    camion_id: int,
+    db: Session = Depends(get_db),
+    _user: models.Utilisateur = Depends(perms.require_permission("camions:supprimer_definitif")),
+):
+    crud.supprimer_camion_definitif(db, camion_id)
+    return {"detail": "Camion et tout son historique supprimés définitivement."}
+
+
 @router.post("/{camion_id}/changer-etat", response_model=schemas.HistoriqueEtatOut)
 def changer_etat_camion(
     camion_id: int,
     changement: schemas.ChangementEtat,
     db: Session = Depends(get_db),
-    user: models.Utilisateur = Depends(auth.require_roles("operation", "admin")),
+    user: models.Utilisateur = Depends(perms.require_permission("etats:changer")),
 ):
-    """L'action centrale : déclarer le nouvel état d'un camion en un clic."""
-    # Si le champ saisi_par n'est pas fourni explicitement, on utilise le nom
-    # de l'utilisateur connecté -- plus fiable qu'un champ texte libre.
+    if user.role == "maintenance":
+        etat_cible = crud.get_etat_by_code(db, changement.etat_code)
+        if etat_cible.groupe not in ("Maintenance", "Incident"):
+            raise HTTPException(
+                status_code=403,
+                detail="Le rôle Maintenance ne peut changer un camion que vers un état "
+                       "de maintenance ou de panne.",
+            )
     if not changement.saisi_par:
         changement.saisi_par = user.nom
     return crud.changer_etat(db, camion_id, changement)
-
 
 @router.get("/{camion_id}/historique", response_model=List[schemas.HistoriqueEtatOut])
 def historique_camion(
