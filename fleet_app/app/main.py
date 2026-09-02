@@ -40,3 +40,31 @@ app.include_router(missions.router)
 @app.get("/")
 def racine():
     return {"message": "Fleet Tracker API — voir /docs pour la documentation interactive"}
+
+
+def init_database():
+    from seed_etats import seed as seed_etats
+    from seed_categorie_dg import seed as seed_categorie_dg
+    from create_admin import creer_admin
+
+    print("=== INITIALISATION DE LA BASE DE DONNÉES ===")
+
+    try:
+        print("1/3 - Initialisation des états...")
+        seed_etats()
+
+        print("2/3 - Initialisation des catégories DG...")
+        seed_categorie_dg()
+
+        print("3/3 - Vérification du compte administrateur...")
+        creer_admin()
+
+        print("=== INITIALISATION TERMINÉE ===")
+
+    except Exception as e:
+        print(f"ERREUR INITIALISATION : {e}")
+
+
+@app.on_event("startup")
+async def startup_event():
+    init_database()
