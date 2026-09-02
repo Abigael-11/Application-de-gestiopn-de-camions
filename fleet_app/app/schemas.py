@@ -138,6 +138,7 @@ class CamionStatutActuel(BaseModel):
     etat_actuel: Optional[EtatReference] = None
     depuis: Optional[datetime] = None
     duree_dans_etat_heures: Optional[float] = None
+    lieu: Optional[str] = None
 
 
 class DureeMoyenneParEtat(BaseModel):
@@ -204,8 +205,6 @@ class MissionBase(BaseModel):
     lieu_destination: Optional[str] = None
     distance_km: Optional[float] = None
     date_depart_prevue: Optional[datetime] = None
-    date_arrivee_prevue: Optional[datetime] = None
-    date_depart_reelle: Optional[datetime] = None
     date_arrivee_reelle: Optional[datetime] = None
     statut: Optional[str] = "planifiee"
     saisi_par: Optional[str] = None
@@ -224,8 +223,6 @@ class MissionUpdate(BaseModel):
     lieu_destination: Optional[str] = None
     distance_km: Optional[float] = None
     date_depart_prevue: Optional[datetime] = None
-    date_arrivee_prevue: Optional[datetime] = None
-    date_depart_reelle: Optional[datetime] = None
     date_arrivee_reelle: Optional[datetime] = None
     statut: Optional[str] = None
     saisi_par: Optional[str] = None

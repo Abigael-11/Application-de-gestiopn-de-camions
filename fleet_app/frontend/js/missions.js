@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (e.target.id === "modalOverlayMission") closeModalMission();
   });
   el("btnConfirmMission").addEventListener("click", enregistrerMission);
-el("filtreStatut").addEventListener("change", loadMissions);
+  el("filtreStatut").addEventListener("change", loadMissions);
 
   await loadMissions();
 });
@@ -34,7 +34,7 @@ async function loadMissions() {
       api.listCamions(true),
       api.listChauffeurs(true),
     ]);
-       camionsCache = camions;
+    camionsCache = camions;
     chauffeursCache = chauffeurs;
 
     const selectCamion = el("mCamionId");
@@ -67,7 +67,10 @@ async function loadMissions() {
           <td>
             <button class="btn btn-secondary btn-sm" onclick='ouvrirEditionMission(${JSON.stringify(m)})'>✎ Modifier</button>
             ${m.statut !== "terminee" && m.statut !== "annulee"
-              ? `<button class="btn btn-primary btn-sm" onclick="terminerMission(${m.id})">✓ Terminer</button>`
+              ? `<button class="btn btn-primary btn-sm" onclick='terminerMission(${JSON.stringify(m)})'>✓ Terminer</button>`
+              : ""}
+            ${["super_admin", "admin_transport"].includes(session.getRole())
+              ? `<button class="btn btn-secondary btn-sm" style="color:var(--immob)" onclick='supprimerMission(${m.id})'>🗑 Supprimer</button>`
               : ""}
           </td>
         </tr>
@@ -79,13 +82,23 @@ async function loadMissions() {
   }
 }
 
-async function terminerMission(id) {
+function terminerMission(m) {
+  ouvrirEditionMission(m);
+  el("mStatut").value = "terminee";
+  if (!el("mDateArriveeReelle").value) {
+    const maintenant = new Date();
+    maintenant.setMinutes(maintenant.getMinutes() - maintenant.getTimezoneOffset());
+    el("mDateArriveeReelle").value = maintenant.toISOString().slice(0, 16);
+  }
+}
+
+async function supprimerMission(id) {
+  if (!confirm("Supprimer définitivement cette mission ? Cette action est irréversible.")) {
+    return;
+  }
   try {
-    await api.updateMission(id, {
-      statut: "terminee",
-      date_arrivee_reelle: new Date().toISOString(),
-    });
-    showToast("Mission marquée comme terminée.");
+    await api.supprimerMission(id);
+    showToast("Mission supprimée.");
     await loadMissions();
   } catch (err) {
     showToast(err.message, true);
@@ -102,7 +115,7 @@ function ouvrirNouvelleMission() {
   el("mLieuDepart").value = "";
   el("mLieuDestination").value = "";
   el("mDateDepartPrevue").value = "";
-  el("mDateArriveePrevue").value = "";
+  el("mDateArriveeReelle").value = "";
   el("mStatut").value = "planifiee";
   el("modalErrorMission").style.display = "none";
   el("modalOverlayMission").classList.add("open");
@@ -118,7 +131,7 @@ function ouvrirEditionMission(m) {
   el("mLieuDepart").value = m.lieu_depart || "";
   el("mLieuDestination").value = m.lieu_destination || "";
   el("mDateDepartPrevue").value = m.date_depart_prevue ? m.date_depart_prevue.slice(0, 16) : "";
-  el("mDateArriveePrevue").value = m.date_arrivee_prevue ? m.date_arrivee_prevue.slice(0, 16) : "";
+  el("mDateArriveeReelle").value = m.date_arrivee_reelle ? m.date_arrivee_reelle.slice(0, 16) : "";
   el("mStatut").value = m.statut || "planifiee";
   el("modalErrorMission").style.display = "none";
   el("modalOverlayMission").classList.add("open");
@@ -141,7 +154,7 @@ async function enregistrerMission() {
     lieu_depart: el("mLieuDepart").value.trim() || null,
     lieu_destination: el("mLieuDestination").value.trim() || null,
     date_depart_prevue: el("mDateDepartPrevue").value || null,
-    date_arrivee_prevue: el("mDateArriveePrevue").value || null,
+    date_arrivee_reelle: el("mDateArriveeReelle").value || null,
     statut: el("mStatut").value,
   };
 

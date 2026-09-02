@@ -26,21 +26,21 @@ PERMISSIONS = {
     "etats:changer": ["super_admin", "admin_transport", "dispatcher", "maintenance"],
     "etats:lire":    ["super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte"],
 
-    "stats:lire": ["super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte", "comptable"],
+    "stats:lire": ["super_admin", "admin_transport", "dispatcher", "gestionnaire_flotte", "comptable"],
 
     "utilisateurs:gerer": ["super_admin"],
     "utilisateurs:supprimer_definitif": ["super_admin"],
 
-    "parametres:gerer": ["super_admin"],
+    "parametres:gerer": ["super_admin","admin_transport"],
     "parametres:lire":  ["super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte"],
 
     "chauffeurs:creer":     ["super_admin", "admin_transport"],
     "chauffeurs:lire":      ["super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte", "comptable"],
     "chauffeurs:modifier":  ["super_admin", "admin_transport"],
-    "chauffeurs:supprimer": ["super_admin", "admin_transport"],
+    "chauffeurs:supprimer_definitif": ["super_admin","admin_transport"],
 
     "missions:creer":     ["super_admin", "admin_transport", "dispatcher"],
-    "missions:lire":      ["super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte", "comptable"],
+    "missions:lire":      ["super_admin", "admin_transport", "dispatcher", "gestionnaire_flotte", "comptable"],
     "missions:modifier":  ["super_admin", "admin_transport", "dispatcher"],
     "missions:supprimer": ["super_admin", "admin_transport"],
 }

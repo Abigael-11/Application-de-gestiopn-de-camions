@@ -142,7 +142,7 @@ function render() {
         </td>
         <td>${badgeHtml(c.etat_actuel)}</td>
         <td class="${anomalie ? "since-anomalie" : "since-normal"}">${c.duree_dans_etat_heures !== null && c.duree_dans_etat_heures !== undefined ? formatDuree(c.duree_dans_etat_heures) : "—"}</td>
-        <td>—</td>
+        <td>${escapeHtml(c.lieu || "—")}</td>
         <td>
           <div class="row-actions">
             ${["super_admin", "admin_transport", "dispatcher", "maintenance"].includes(session.getRole()) ? `<button class="btn btn-primary btn-sm" onclick="openModal(${c.camion.id}, '${escapeHtml(c.camion.immatriculation)}')">↻ Changer l'état</button>` : ""}

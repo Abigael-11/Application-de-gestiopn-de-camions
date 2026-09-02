@@ -2,11 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Missions — Fleet Ops</title>
 <link rel="stylesheet" href="css/style.css" />
-<link rel="icon" type="image/x-icon" href="favicon.ico" />
 </head>
 <body>
 
@@ -17,9 +15,10 @@
       <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
     </div>
     <div class="nav-label">Navigation</div>
-    <a class="nav-item" href="index.html">▦ Tableau de bord</a>
-    <a class="nav-item" href="missions.html">▤ Missions</a>
-    <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
+    <a class="nav-item active" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
       <div class="loc">Brazzaville · Congo</div>
@@ -33,7 +32,7 @@
         <p class="page-subtitle">Planification et suivi des missions de transport</p>
       </div>
 
-<select id="filtreStatut" style="margin-right:10px;">
+      <select id="filtreStatut" style="margin-right:10px;">
         <option value="">Tous les statuts</option>
         <option value="planifiee">Planifiée</option>
         <option value="en_cours">En cours</option>
@@ -72,8 +71,8 @@
     <div class="field"><label for="mChauffeurId">Chauffeur</label><select id="mChauffeurId"><option value="">— Aucun —</option></select></div>
     <div class="field"><label for="mLieuDepart">Lieu de départ</label><input type="text" id="mLieuDepart" placeholder="ex : Pointe-Noire" /></div>
     <div class="field"><label for="mLieuDestination">Lieu de destination</label><input type="text" id="mLieuDestination" placeholder="ex : Bangui" /></div>
-    <div class="field"><label for="mDateDepartPrevue">Date de départ prévue</label><input type="datetime-local" id="mDateDepartPrevue" /></div>
-    <div class="field"><label for="mDateArriveePrevue">Date d'arrivée prévue</label><input type="datetime-local" id="mDateArriveePrevue" /></div>
+    <div class="field"><label for="mDateDepartPrevue">Date de départ </label><input type="datetime-local" id="mDateDepartPrevue" /></div>
+    <div class="field"><label for="mDateArriveeReelle">Date d'arrivée</label><input type="datetime-local" id="mDateArriveeReelle" /></div>
     <div class="field"><label for="mStatut">Statut</label>
       <select id="mStatut">
         <option value="planifiee">Planifiée</option>
@@ -93,6 +92,5 @@
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/missions.js"></script>
-
 </body>
 </html>

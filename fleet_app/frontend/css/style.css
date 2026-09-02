@@ -353,7 +353,8 @@ tbody tr:hover { background: rgba(0,0,0,0.02); }
 .modal-overlay.open { display: flex; }
 .modal {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  width: 420px; padding: 22px;
+  width: 420px; max-width: calc(100vw - 32px); padding: 22px;
+  max-height: 85vh; overflow-y: auto;
 }
 .modal h3 { margin: 0 0 4px; font-size: 16px; }
 .modal p.sub { margin: 0 0 18px; color: var(--text-secondary); font-size: 12.5px; }
@@ -387,3 +388,30 @@ tbody tr:hover { background: rgba(0,0,0,0.02); }
 
 .skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--skeleton-highlight) 37%, var(--border) 63%); background-size: 400% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
 @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+.dash-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+}
+
+.status-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--actif);
+  font-weight: 600;
+}
+.status-live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--actif);
+  box-shadow: 0 0 0 3px var(--actif-bg);
+}
+
+.topbar-bell {
+  font-size: 16px;
+  cursor: default;
+  opacity: 0.8;
+}

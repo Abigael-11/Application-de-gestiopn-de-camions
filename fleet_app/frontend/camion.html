@@ -32,9 +32,10 @@
       <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
     </div>
     <div class="nav-label">Navigation</div>
-    <a class="nav-item" href="index.html">▦ Tableau de bord</a>
-    <a class="nav-item" href="missions.html">▤ Missions</a>
-    <a class="nav-item" href="parametres.html">⚙ Paramètres</a>
+    <a class="nav-item active" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
       <div class="loc">Brazzaville · Congo</div>
@@ -80,7 +81,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
       <div class="detail-sub" id="eventCount">0 événements ce mois-ci</div>
       <div class="row-actions">
-        <button class="btn btn-secondary" id="btnRapport">📄 Générer un rapport (CSV)</button>
+        <button class="btn btn-secondary" id="btnRapport">📄 Générer un rapport (PDF)</button>
         <a class="btn btn-secondary" id="btnHistorique">⏱ Voir l'historique complet →</a>
       </div>
     </div>
@@ -93,8 +94,9 @@
     <h3>Changer l'état</h3>
     <p class="sub" id="modalSub"></p>
     <div class="modal-error" id="modalError"></div>
-    <div class="field"><label for="fEtat">Nouvel état</label><select id="fEtat"></select></div>
+    <div cle ass="field"><label for="fEtat">Nouvel état</label><select id="fEtat"></select></div>
     <div class="field"><label for="fLieu">Lieu (optionnel)</label><input type="text" id="fLieu" placeholder="ex : Atelier Douala" /></div>
+    <div class="field"><label for="fMarchandise">Marchandise transportée (optionnel)</label><input type="text" id="fMarchandise" placeholder="ex : Ciment, 30t" /></div>
     <div class="field"><label for="fSaisiPar">Saisi par</label><input type="text" id="fSaisiPar" placeholder="ex : Jean (opération)" /></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancel">Annuler</button>
@@ -107,6 +109,8 @@
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="js/camion.js"></script>
 </body>
 </html>

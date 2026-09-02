@@ -59,6 +59,21 @@ def modifier_camion(
     """
     return crud.update_camion(db, camion_id, updates)
 
+@router.get("/{camion_id}/historique", response_model=List[schemas.HistoriqueEtatOut])
+def historique_camion(
+    camion_id: int,
+    depuis_jours: Optional[int] = Query(None),
+    date_debut: Optional[datetime] = Query(None),
+    date_fin: Optional[datetime] = Query(None),
+    db: Session = Depends(get_db),
+    _user=LECTURE,
+):
+    crud.get_camion(db, camion_id)
+    depuis = date_debut
+    if not depuis and depuis_jours:
+        from datetime import timedelta, timezone
+        depuis = datetime.now(timezone.utc) - timedelta(days=depuis_jours)
+    return crud.get_historique_camion(db, camion_id, depuis, date_fin)
 
 @router.delete("/{camion_id}")
 def supprimer_camion(

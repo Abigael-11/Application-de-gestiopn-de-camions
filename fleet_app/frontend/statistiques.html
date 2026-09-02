@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Statistiques — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  .trajet-card { padding: 16px; margin-bottom: 12px; cursor: pointer; }
+  .trajet-header { display: flex; justify-content: space-between; align-items: center; }
+  .trajet-nom { font-weight: 700; font-size: 14.5px; }
+  .trajet-chiffres { display: flex; gap: 24px; }
+  .trajet-chiffre { text-align: right; }
+  .trajet-chiffre .valeur { font-size: 16px; font-weight: 700; }
+  .trajet-chiffre .label { font-size: 11px; color: var(--text-muted); }
+  .trajet-detail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .trajet-detail.open { display: block; }
+  .mission-ligne { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .mission-ligne:last-child { border-bottom: none; }
+  .mission-duree { font-weight: 700; }
+  .mission-duree.lente { color: var(--immob); }
+  .btn-justifier { font-size: 11px; padding: 4px 8px; }
+  .justif-box { margin-top: 8px; padding: 10px 12px; background: var(--bg-app); border-radius: var(--radius); font-size: 12px; display: none; }
+  .justif-box.open { display: block; }
+  .justif-ligne { display: flex; justify-content: space-between; padding: 4px 0; }
+  .justif-ligne.cause { color: var(--immob); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
+      <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Statistiques</h1>
+        <p class="page-subtitle">Temps de trajet moyen par destination, basé sur les missions terminées</p>
+      </div>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+    <div id="emptyState" class="empty-state" style="display:none">
+      <div class="empty-state-title">Pas encore assez de données</div>
+      <div>Aucune mission terminée avec des dates de départ et d'arrivée réelles renseignées.</div>
+    </div>
+
+    <div id="trajetsContainer"></div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/statistiques.js"></script>
+</body>
+</html>

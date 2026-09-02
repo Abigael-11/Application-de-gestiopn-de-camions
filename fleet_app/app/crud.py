@@ -136,12 +136,20 @@ def changer_etat(db: Session, camion_id: int, changement: schemas.ChangementEtat
         raise HTTPException(status_code=500, detail=f"Erreur lors du changement d'état: {e}")
 
 
-def get_historique_camion(db: Session, camion_id: int, depuis: datetime = None):
+def get_historique_camion(db: Session, camion_id: int, depuis: datetime = None, jusqu_a: datetime = None):
     query = db.query(models.HistoriqueEtat).filter(models.HistoriqueEtat.camion_id == camion_id)
-    if depuis:
+    if jusqu_a:
+        # Plage explicite (date_debut -> date_fin) : utilisé pour croiser une mission
+        # précise avec l'historique d'état sur sa fenêtre de trajet réelle.
+        query = query.filter(models.HistoriqueEtat.date_debut <= jusqu_a)
+        if depuis:
+            query = query.filter(
+                (models.HistoriqueEtat.date_fin == None) | (models.HistoriqueEtat.date_fin >= depuis)
+            )
+    elif depuis:
+        # Comportement historique inchangé (depuis_jours) — ne pas toucher
         query = query.filter(models.HistoriqueEtat.date_debut >= depuis)
     return query.order_by(models.HistoriqueEtat.date_debut.desc()).all()
-
 
 def get_statut_actuel(db: Session, camion: models.Camion) -> schemas.CamionStatutActuel:
     ligne_en_cours = get_etat_en_cours(db, camion.id)
@@ -154,6 +162,7 @@ def get_statut_actuel(db: Session, camion: models.Camion) -> schemas.CamionStatu
         etat_actuel=ligne_en_cours.etat,
         depuis=ligne_en_cours.date_debut,
         duree_dans_etat_heures=round(duree, 1),
+        lieu=ligne_en_cours.lieu,
     )
 
 
@@ -398,4 +407,20 @@ def supprimer_utilisateur_definitif(db: Session, utilisateur_id: int):
     if not utilisateur:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
     db.delete(utilisateur)
+    db.commit()
+
+def supprimer_chauffeur_definitif(db: Session, chauffeur_id: int):
+    """
+    Suppression DÉFINITIVE d'un chauffeur, réservée à super_admin.
+    Détache (chauffeur_id = NULL) les missions liées plutôt que de les supprimer.
+    """
+    chauffeur = db.query(models.Chauffeur).filter(models.Chauffeur.id == chauffeur_id).first()
+    if not chauffeur:
+        raise HTTPException(status_code=404, detail="Chauffeur introuvable")
+
+    db.query(models.Mission).filter(
+        models.Mission.chauffeur_id == chauffeur_id
+    ).update({"chauffeur_id": None})
+
+    db.delete(chauffeur)
     db.commit()

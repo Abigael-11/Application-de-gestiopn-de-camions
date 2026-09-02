@@ -34,9 +34,10 @@
       <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
     </div>
     <div class="nav-label">Navigation</div>
-    <a class="nav-item" href="index.html">▦ Tableau de bord</a>
-<a class="nav-item" href="missions.html">▤ Missions</a>
-    <a class="nav-item active" href="parametres.html">⚙ Paramètres</a>
+    <a class="nav-item active" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
       <div class="loc">Brazzaville · Congo</div>
@@ -149,7 +150,7 @@
         <option value="admin_transport">Administrateur Transport</option>
         <option value="dispatcher">Exploitant / Dispatcher</option>
         <option value="maintenance">Responsable Maintenance</option>
-        <option value="gestionnaire_flotte">Gestionnaire de Flotte</option>
+        <option value="gestionnaire_flotte">Superviseur</option>
         <option value="comptable">Comptable</option>
               
       </select>
@@ -214,20 +215,23 @@
     </div>
     <div class="field">
       <label for="eCategorie">Catégorie (pilote le calcul du taux d'occupation)</label>
-      
-      <div class="field">
-        <label for="eCategorieDg">Fleet Activity(7 catégories)</label>
-        <select id="eCategorieDg">
-          <option value="">— Non classé —</option>
-          <option value="Driving">Driving</option>
-          <option value="Loading and offloading">Loading and offloading</option>
-          <option value="Breakdown">Breakdown</option>
-          <option value="Workshop empty/Loaded">Workshop empty/Loaded</option>
-          <option value="Waiting fuel">Waiting fuel</option>
-          <option value="Waiting for documents">Waiting for documents</option>
-          <option value="Accident">Accident</option>
-        </select>
-      </div>
+      <select id="eCategorie">
+        <option value="actif">Actif</option>
+        <option value="attente">Attente</option>
+        <option value="immobilisation">Immobilisation</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="eCategorieDg">Fleet Activity (7 catégories)</label>
+      <select id="eCategorieDg">
+        <option value="">— Non classé —</option>
+        <option value="Driving">Driving</option>
+        <option value="Loading and offloading">Loading and offloading</option>
+        <option value="Breakdown">Breakdown</option>
+        <option value="Workshop empty/Loaded">Workshop empty/Loaded</option>
+        <option value="Waiting fuel">Waiting fuel</option>
+        <option value="Waiting for documents">Waiting for documents</option>
+        <option value="Accident">Accident</option>
       </select>
     </div>
     <div class="modal-actions">

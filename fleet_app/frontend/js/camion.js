@@ -22,7 +22,7 @@ async function init() {
   el("modalOverlay").addEventListener("click", (e) => { if (e.target.id === "modalOverlay") closeModal(); });
   el("btnConfirm").addEventListener("click", confirmerChangementEtat);
   el("btnHistorique").addEventListener("click", () => { window.location.href = `historique.html?id=${camionId}`; });
-  el("btnRapport").addEventListener("click", genererRapportCsv);
+  el("btnRapport").addEventListener("click", genererRapportPdf);
 
   await loadAll();
 }
@@ -41,6 +41,8 @@ async function loadAll() {
     historiqueMois = historique;
     populateEtatSelect();
     renderHeader(statut);
+    dernierStatut = statut;
+    dernieresStats = stats;
     renderCards(statut, stats);
     renderMiniTimeline(historiqueAnnee);
     el("eventCount").textContent = `${historique.length} événement${historique.length > 1 ? "s" : ""} ce mois-ci`;
@@ -119,12 +121,86 @@ function renderCards(statut, stats) {
   `;
 }
 
-function genererRapportCsv() {
+let dernierStatut = null;
+let dernieresStats = null;
+
+function genererRapportPdf() {
   if (!historiqueMois.length) {
     showToast("Aucun événement à inclure dans le rapport pour l'instant.", true);
     return;
   }
-  const entetes = ["État", "Catégorie", "Début", "Fin", "Durée (h)", "Lieu", "Marchandise", "Saisi par"];
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const immat = document.getElementById("titreImmat").textContent;
+  const c = dernierStatut ? dernierStatut.camion : {};
+  let y = 18;
+
+  // -- En-tête --
+  doc.setFontSize(16);
+  doc.setFont(undefined, "bold");
+  doc.text("TransAfrique Logistics Cameroun", 14, y);
+  doc.setFontSize(11);
+  doc.setFont(undefined, "normal");
+  y += 7;
+  doc.text(`Rapport camion — ${immat}`, 14, y);
+  y += 5;
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(`Généré le ${new Date().toLocaleString("fr-FR")}`, 14, y);
+  doc.setTextColor(0);
+  y += 10;
+
+  // -- Infos camion --
+  doc.setFontSize(12);
+  doc.setFont(undefined, "bold");
+  doc.text("Informations", 14, y);
+  y += 6;
+  doc.setFontSize(10);
+  doc.setFont(undefined, "normal");
+  doc.text(`Immatriculation : ${immat}`, 14, y); y += 5;
+  doc.text(`Flotte / Marque : ${c.marque || "—"}`, 14, y); y += 5;
+  doc.text(`Capacité : ${c.capacite_tonnes ? c.capacite_tonnes + " t" : "—"}`, 14, y); y += 5;
+  doc.text(`Chauffeur actuel : ${c.chauffeur_actuel || "—"}`, 14, y); y += 10;
+
+  // -- Statistiques (taux d'occupation DG + répartition par catégorie) --
+  doc.setFontSize(12);
+  doc.setFont(undefined, "bold");
+  doc.text("Statistiques (30 derniers jours)", 14, y);
+  y += 6;
+  doc.setFontSize(10);
+  doc.setFont(undefined, "normal");
+
+  let heuresProductif = 0, heuresTotal = 0;
+  const heuresParCategorie = {};
+  (dernieresStats || []).forEach((s) => {
+    const etatRef = etats.find((e) => e.code === s.etat_code);
+    const heures = s.duree_moyenne_heures * s.nombre_occurrences;
+    heuresTotal += heures;
+    if (etatRef) {
+      const cat = etatRef.categorie_dg || "Non classé";
+      heuresParCategorie[cat] = (heuresParCategorie[cat] || 0) + heures;
+      if (cat === "Driving" || cat === "Loading and offloading") heuresProductif += heures;
+    }
+  });
+  const tauxOccupation = heuresTotal > 0 ? (heuresProductif / heuresTotal) * 100 : null;
+
+  doc.text(`Taux d'occupation : ${tauxOccupation !== null ? tauxOccupation.toFixed(1) + " %" : "—"}`, 14, y);
+  y += 5;
+  doc.text("Répartition par catégorie :", 14, y);
+  y += 5;
+  Object.entries(heuresParCategorie).forEach(([cat, heures]) => {
+    doc.text(`  • ${cat} : ${formatDuree(heures)}`, 16, y);
+    y += 5;
+  });
+  y += 6;
+
+  // -- Historique détaillé --
+  doc.setFontSize(12);
+  doc.setFont(undefined, "bold");
+  doc.text("Historique des états (31 derniers jours)", 14, y);
+  y += 2;
+
   const lignes = [...historiqueMois]
     .sort((a, b) => new Date(b.date_debut) - new Date(a.date_debut))
     .map((h) => {
@@ -132,20 +208,25 @@ function genererRapportCsv() {
       const fin = h.date_fin ? new Date(h.date_fin) : new Date();
       const dureeH = ((fin - debut) / 3600000).toFixed(1);
       return [
-        h.etat.libelle, CATEGORIE_LABEL[h.etat.categorie] || h.etat.categorie,
-        debut.toLocaleString("fr-FR"), h.date_fin ? fin.toLocaleString("fr-FR") : "en cours",
-        dureeH, h.lieu || "", h.marchandise || "", h.saisi_par || "",
-      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";");
+        h.etat.libelle,
+        debut.toLocaleString("fr-FR"),
+        h.date_fin ? fin.toLocaleString("fr-FR") : "en cours",
+        dureeH + " h",
+        h.lieu || "—",
+        h.saisi_par || "—",
+      ];
     });
-  const csv = [entetes.join(";"), ...lignes].join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `rapport_${document.getElementById("titreImmat").textContent}_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast("Rapport généré et téléchargé.");
+
+  doc.autoTable({
+    startY: y + 4,
+    head: [["État", "Début", "Fin", "Durée", "Lieu", "Saisi par"]],
+    body: lignes,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [217, 142, 31] },
+  });
+
+  doc.save(`rapport_${immat}_${new Date().toISOString().slice(0, 10)}.pdf`);
+  showToast("Rapport PDF généré et téléchargé.");
 }
 
 function renderMiniTimeline(historique) {

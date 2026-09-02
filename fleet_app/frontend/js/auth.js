@@ -50,7 +50,7 @@ const ROLE_LABEL = {
   admin_transport: "Administrateur Transport",
   dispatcher: "Exploitant / Dispatcher",
   maintenance: "Responsable Maintenance",
-  gestionnaire_flotte: "Gestionnaire de Flotte",
+  gestionnaire_flotte: "Superviseur",
   comptable: "Comptable",
 };
 function requireAuth() {

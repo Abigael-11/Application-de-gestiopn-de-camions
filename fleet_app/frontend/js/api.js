@@ -63,6 +63,8 @@ const api = {
     apiFetch(`/camions/${id}/changer-etat`, { method: "POST", body: JSON.stringify(payload) }),
   historique: (id, depuisJours) =>
     apiFetch(`/camions/${id}/historique${depuisJours ? `?depuis_jours=${depuisJours}` : ""}`),
+  historiquePlage: (id, dateDebutISO, dateFinISO) =>
+    apiFetch(`/camions/${id}/historique?date_debut=${encodeURIComponent(dateDebutISO)}&date_fin=${encodeURIComponent(dateFinISO)}`),
   listEtats: () => apiFetch("/etats/"),
   repartitionCategorieDg: (camionId, derniersJours) => apiFetch(`/stats/repartition-categorie-dg?derniers_jours=${derniersJours || 30}` + (camionId ? `&camion_id=${camionId}` : "")),
   createEtat: (payload) =>
@@ -86,6 +88,8 @@ const api = {
   
   listChauffeurs: (inclureInactifs) => apiFetch(`/chauffeurs/${inclureInactifs ? "?inclure_inactifs=true" : ""}`),
   createChauffeur: (payload) => apiFetch("/chauffeurs/", { method: "POST", body: JSON.stringify(payload) }),
+  updateChauffeur: (id, payload) => apiFetch(`/chauffeurs/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteChauffeurDefinitif: (id) => apiFetch(`/chauffeurs/${id}/definitif`, { method: "DELETE" }),
   updateChauffeur: (id, payload) => apiFetch(`/chauffeurs/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
 
   // Missions
