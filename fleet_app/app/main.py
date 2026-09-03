@@ -2,8 +2,10 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base, engine
+from app.database import Base, engine, SessionLocal
 from app.routers import camions, stats, etats, auth, utilisateurs, chauffeurs, missions
+from app.init_donnees import initialiser_donnees
+
 
 # Crée les tables si elles n'existent pas encore (suffisant pour le MVP ;
 # on passera à Alembic pour les migrations quand le schéma se stabilisera)
@@ -66,5 +68,22 @@ def init_database():
 
 
 @app.on_event("startup")
+def au_demarrage():
+    """
+    Initialise automatiquement les états de référence, les catégories DG et
+    le compte admin par défaut s'ils n'existent pas encore -- nécessaire sur
+    Render (plan gratuit) qui n'offre pas de terminal Shell pour lancer les
+    scripts seed_etats.py / seed_categorie_dg.py / create_admin.py à la main.
+    Sans danger de le relancer à chaque démarrage : ne fait rien si c'est déjà en place.
+    """
+    db = SessionLocal()
+    try:
+        initialiser_donnees(db)
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
 async def startup_event():
     init_database()
+
