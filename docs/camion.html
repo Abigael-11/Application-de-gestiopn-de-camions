@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Détail camion — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<style>
+  .detail-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .detail-card.accent { border-left: 3px solid var(--immob); }
+  .detail-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; margin-bottom: 10px; }
+  .detail-value { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .detail-sub { font-size: 12px; color: var(--text-muted); }
+  .anomalie-tag { color: var(--immob); font-size: 12px; font-weight: 700; }
+  .header-title-row { display: flex; align-items: center; gap: 10px; }
+  .mini-timeline { position: relative; margin-top: 12px; }
+  .mini-timeline .taux-point { cursor: pointer; }
+  .mini-tooltip { position: absolute; bottom: calc(100% + 10px); transform: translateX(-50%); background: var(--bg-card-hover); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,0.35); pointer-events: none; opacity: 0; transition: opacity 0.12s ease; z-index: 20; }
+  .mini-tooltip.show { opacity: 1; }
+  .mini-tooltip strong { display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
+      <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb"><a href="index.html">Tableau de bord</a> &nbsp;›&nbsp; <span id="bcImmat">…</span></div>
+
+    <div class="page-header">
+      <div>
+        <div class="header-title-row">
+          <h1 class="page-title" id="titreImmat">—</h1>
+          <span id="titreBadge"></span>
+        </div>
+        <p class="page-subtitle" id="sousTitre">Chargement…</p>
+      </div>
+      <div class="row-actions">
+        <a class="btn btn-secondary" id="btnDossierExterne" href="#" target="_blank" rel="noopener" style="display:none">↗ Voir le dossier complet</a>
+        <button class="btn btn-primary" id="btnChanger">↻ Changer l'état</button>
+      </div>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+
+    <div class="detail-cards" id="detailCards"></div>
+
+    <div class="table-card" style="padding:18px 18px 20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:14px;" id="activiteTitre">Activité</div>
+          <div class="detail-sub">Survolez un segment pour voir le détail</div>
+        </div>
+        <div class="legend" style="margin:0">
+          <span><span class="legend-dot" style="background:var(--actif)"></span>Actif</span>
+          <span><span class="legend-dot" style="background:var(--attente)"></span>Attente</span>
+          <span><span class="legend-dot" style="background:var(--immob)"></span>Immobil.</span>
+        </div>
+      </div>
+      <div class="mini-timeline" id="miniTimeline"></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+      <div class="detail-sub" id="eventCount">0 événements ce mois-ci</div>
+      <div class="row-actions">
+        <button class="btn btn-secondary" id="btnRapport">📄 Générer un rapport (PDF)</button>
+        <a class="btn btn-secondary" id="btnHistorique">⏱ Voir l'historique complet →</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal changer état (identique au dashboard) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Changer l'état</h3>
+    <p class="sub" id="modalSub"></p>
+    <div class="modal-error" id="modalError"></div>
+    <div cle ass="field"><label for="fEtat">Nouvel état</label><select id="fEtat"></select></div>
+    <div class="field"><label for="fLieu">Lieu (optionnel)</label><input type="text" id="fLieu" placeholder="ex : Atelier Douala" /></div>
+    <div class="field"><label for="fMarchandise">Marchandise transportée (optionnel)</label><input type="text" id="fMarchandise" placeholder="ex : Ciment, 30t" /></div>
+    <div class="field"><label for="fSaisiPar">Saisi par</label><input type="text" id="fSaisiPar" placeholder="ex : Jean (opération)" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancel">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirm">Confirmer le changement</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="js/camion.js"></script>
+</body>
+</html>

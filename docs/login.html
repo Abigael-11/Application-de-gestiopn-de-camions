@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connexion — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; width: 360px; }
+  .login-brand { display: flex; justify-content: center; margin-bottom: 22px; }
+  .login-logo { width: 100%; max-width: 260px; height: auto; }
+  .login-title { font-size: 17px; font-weight: 700; margin: 0 0 6px; }
+  .login-sub { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 22px; }
+</style>
+</head>
+<body>
+  <div class="login-box">
+  <div class="login-brand">
+    <img src="img/logo-full.png" alt="TransAfrique Logistics Cameroun" class="login-logo" />
+  </div>
+  <p class="login-title">Connexion</p>
+  <p class="login-sub">Accédez au tableau de bord de la flotte.</p>
+
+  <div class="modal-error" id="loginError"></div>
+
+  <form id="loginForm">
+    <div class="field">
+      <label for="identifiant">Identifiant</label>
+      <input type="text" id="identifiant" autocomplete="username" required />
+    </div>
+    <div class="field">
+      <label for="motDePasse">Mot de passe</label>
+      <input type="password" id="motDePasse" autocomplete="current-password" required />
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" id="btnLogin">Se connecter</button>
+  </form>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

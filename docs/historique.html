@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Historique — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<style>
+  .period-tabs { display: flex; gap: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; }
+  .period-tab { padding: 7px 14px; border-radius: 6px; font-size: 12.5px; color: var(--text-secondary); cursor: pointer; }
+  .period-tab.active { background: var(--bg-card-hover); color: var(--accent); font-weight: 600; }
+  .content-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+  .frise-track { position: relative; height: 46px; background: var(--bg-app); border-radius: 6px; overflow: hidden; margin-top: 14px; }
+  .frise-seg { position: absolute; top: 0; height: 100%; }
+  .frise-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin-top: 6px; }
+  .recap-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; }
+  .recap-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 10px 0 14px; display: flex; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
+      <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb"><a href="index.html">Tableau de bord</a> ›  <a id="bcCamion" href="#">…</a> › Historique</div>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Historique — <span id="titreImmat">…</span></h1>
+        <p class="page-subtitle" id="sousTitre">Chargement…</p>
+      </div>
+      <div class="period-tabs" id="periodTabs">
+        <div class="period-tab active" data-jours="30">30 derniers jours</div>
+        <div class="period-tab" data-jours="7">7 derniers jours</div>
+        <div class="period-tab" data-jours="365">Sur l'année</div>
+      </div>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+
+    <div class="table-card" style="padding:18px;margin-bottom:16px;">
+      <div style="font-weight:700;font-size:14px;">Frise chronologique</div>
+      <div class="frise-track" id="friseTrack"></div>
+      <div class="frise-axis" id="friseAxis"></div>
+    </div>
+
+    <div class="content-grid">
+      <div class="table-card">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;">Journal des changements d'état</div>
+        <table>
+          <thead><tr><th>État</th><th>Début</th><th>Fin</th><th>Durée</th><th>Lieu</th><th>Saisi par</th></tr></thead>
+          <tbody id="tbody"><tr><td colspan="6"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+        </table>
+        <div id="emptyState" class="empty-state" style="display:none">
+          <div class="empty-state-title">Aucun événement sur cette période</div>
+        </div>
+      </div>
+
+      <div class="table-card" style="padding:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px;">Récapitulatif de la période</div>
+        <div style="display:flex;justify-content:space-between;">
+          <span>Taux d'occupation</span>
+          <strong id="tauxOccupation" style="color:var(--accent)">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card" style="padding:16px;margin-top:16px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px;">Répartition (7 catégories DG)</div>
+      <div id="dgRepartitionRows"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/historique.js"></script>
+</body>
+</html>
