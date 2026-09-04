@@ -1,7 +1,7 @@
 // En local (ouvert via python -m http.server), on cible le backend local.
 // Une fois déployé (GitHub Pages, etc.), on cible le backend en ligne --
 // remplacez la valeur ci-dessous par l'URL Render une fois que vous l'avez.
-const BACKEND_URL_PRODUCTION = "https://VOTRE-APP.onrender.com"; // <-- à modifier après déploiement
+const BACKEND_URL_PRODUCTION = "https://application-de-gestiopn-de-camions.onrender.com";
 
 const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
   ? "http://127.0.0.1:8000"
