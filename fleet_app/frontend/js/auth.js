@@ -64,6 +64,19 @@ function logout() {
   session.clear();
   window.location.href = "login.html";
 }
+
+function setActiveNav() {
+  const currentPage = window.location.pathname.split("/").pop() || "index.html";
+  document.querySelectorAll(".nav-item").forEach((link) => {
+    const href = link.getAttribute("href");
+    if (href === currentPage) {
+      link.classList.add("active");
+    } else {
+      link.classList.remove("active");
+    }
+  });
+}
+
 function initSidebarSession() {
   const teamEl = document.querySelector(".sidebar-footer .team");
   const locEl = document.querySelector(".sidebar-footer .loc");

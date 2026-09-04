@@ -7,6 +7,7 @@ let camionsCache = [];
 document.addEventListener("DOMContentLoaded", async () => {
   if (!requireAuth()) return;
   initSidebarSession();
+  setActiveNav();
   await charger();
 });
 

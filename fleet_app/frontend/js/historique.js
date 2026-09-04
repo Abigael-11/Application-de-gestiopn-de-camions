@@ -7,6 +7,7 @@ const el = (id) => document.getElementById(id);
 async function init() {
   if (!requireAuth()) return;
   initSidebarSession();
+  setActiveNav();
 
   if (!camionId) {
     el("connError").style.display = "block";
