@@ -11,6 +11,7 @@ const el = (id) => document.getElementById(id);
 async function init() {
   if (!requireAuth()) return;
   initSidebarSession();
+  setActiveNav();
 
   el("btnRefresh").addEventListener("click", loadAll);
   el("search").addEventListener("input", render);

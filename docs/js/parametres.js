@@ -9,6 +9,7 @@ async function init() {
     return;
   }
   initSidebarSession();
+  setActiveNav();
 
   el("btnNouveauChauffeur").addEventListener("click", ouvrirNouveauChauffeur);
   el("btnCancelChauffeur").addEventListener("click", closeModalChauffeur);

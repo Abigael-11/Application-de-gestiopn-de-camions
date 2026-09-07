@@ -14,6 +14,7 @@ const STATUT_LABEL = {
 document.addEventListener("DOMContentLoaded", async () => {
   if (!requireAuth()) return;
   initSidebarSession();
+  setActiveNav();
 
   el("btnNouvelleMission").addEventListener("click", ouvrirNouvelleMission);
   el("btnCancelMission").addEventListener("click", closeModalMission);
