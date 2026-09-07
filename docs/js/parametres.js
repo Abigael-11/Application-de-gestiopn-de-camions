@@ -1,5 +1,6 @@
 const el = (id) => document.getElementById(id);
 let camionEnEdition = null;
+let remorqueEnEdition = null;
 
 async function init() {
   if (!requireAuth()) return;
@@ -49,11 +50,17 @@ async function init() {
   el("modalOverlayCamion").addEventListener("click", (e) => { if (e.target.id === "modalOverlayCamion") closeModalCamion(); });
   el("btnConfirmCamion").addEventListener("click", enregistrerNouveauCamion);
 
+  el("btnNouvelleRemorque").addEventListener("click", ouvrirNouvelleRemorque);
+el("btnCancelRemorque").addEventListener("click", closeModalRemorque);
+el("modalOverlayRemorque").addEventListener("click", (e) => { if (e.target.id === "modalOverlayRemorque") closeModalRemorque(); });
+el("btnConfirmRemorque").addEventListener("click", enregistrerRemorque);
+
   el("btnNouvelEtat").addEventListener("click", ouvrirNouvelEtat);
   el("btnCancelEtat").addEventListener("click", closeModalEtat);
   el("modalOverlayEtat").addEventListener("click", (e) => { if (e.target.id === "modalOverlayEtat") closeModalEtat(); });
   el("btnConfirmEtat").addEventListener("click", enregistrerEtat);
 
+  await loadRemorques();
   await loadCamions();
   await loadChauffeurs();
   if (role === "super_admin") {
@@ -302,6 +309,136 @@ async function enregistrerNouveauCamion() {
   } finally {
     btn.disabled = false;
     btn.textContent = "Créer le camion";
+  }
+}
+
+
+/* ---------- Remorques ---------- */
+
+async function loadRemorques() {
+  try {
+    const remorques = await api.listRemorques(true); // inclut aussi les désactivées, pour pouvoir les réactiver
+    if (!remorques.length) {
+      el("remorquesBody").innerHTML = `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px;">Aucune remorque enregistrée pour l'instant.</td></tr>`;
+      return;
+    }
+    el("remorquesBody").innerHTML = remorques.map((r) => `
+    <tr style="${!r.actif ? 'opacity:0.5;' : ''}">
+      <td><strong>${escapeHtml(r.unit || "—")}</strong></td>
+      <td>${escapeHtml(r.immatriculation)}</td>
+      <td>${r.actif ? '<span style="color:var(--actif)">Actif</span>' : '<span style="color:var(--text-muted)">Désactivé</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-secondary btn-sm" onclick='ouvrirEditionRemorque(${JSON.stringify(r)})'>✎ Modifier</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleActifRemorque(${r.id}, ${r.actif})">${r.actif ? "Désactiver" : "Réactiver"}</button>
+          ${session.getRole() === "super_admin" ? `<button class="btn btn-secondary btn-sm" style="color:var(--immob);font-weight:600;" onclick="supprimerRemorque(${r.id}, '${escapeHtml(r.immatriculation)}')">🗑 Supprimer</button>` : ""}
+        </div>
+      </td>
+    </tr>
+    `).join("");
+  } catch (err) {
+    showConnError(err);
+  }
+}
+
+async function toggleActifRemorque(id, actifActuel) {
+  try {
+    await api.updateRemorque(id, { actif: !actifActuel });
+    showToast(actifActuel ? "Remorque désactivée." : "Remorque réactivée.");
+    await loadRemorques();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+async function supprimerRemorque(id, immatriculation) {
+  if (!confirm(`Supprimer définitivement ${immatriculation} ? Cette action est irréversible.`)) return;
+  try {
+    await api.deleteRemorque(id);
+    showToast("Remorque supprimée.");
+    await loadRemorques();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function ouvrirNouvelleRemorque() {
+  remorqueEnEdition = null;
+  el("modalRemorqueTitre").textContent = "Nouvelle remorque";
+  el("rUnit").value = "";
+  el("rImmat").value = "";
+  el("rCarteGrise").value = "";
+  el("rCarteBleue").value = "";
+  el("rVisiteTechnique").value = "";
+  el("rAssurance").value = "";
+  el("rLicenceTransport").value = "";
+  el("rPatenteTalcsa").value = "";
+  el("modalErrorRemorque").style.display = "none";
+  el("btnConfirmRemorque").textContent = "Créer la remorque";
+  el("modalOverlayRemorque").classList.add("open");
+}
+
+function ouvrirEditionRemorque(r) {
+  remorqueEnEdition = r;
+  el("modalRemorqueTitre").textContent = `Modifier — ${r.immatriculation}`;
+  el("rUnit").value = r.unit || "";
+  el("rImmat").value = r.immatriculation || "";
+  el("rCarteGrise").value = r.carte_grise_expiration || "";
+  el("rCarteBleue").value = r.carte_bleue_expiration || "";
+  el("rVisiteTechnique").value = r.visite_technique_expiration || "";
+  el("rAssurance").value = r.assurance_expiration || "";
+  el("rLicenceTransport").value = r.licence_transport_expiration || "";
+  el("rPatenteTalcsa").value = r.patente_talcsa_expiration || "";
+  el("modalErrorRemorque").style.display = "none";
+  el("btnConfirmRemorque").textContent = "Enregistrer";
+  el("modalOverlayRemorque").classList.add("open");
+}
+
+function closeModalRemorque() {
+  el("modalOverlayRemorque").classList.remove("open");
+}
+
+async function enregistrerRemorque() {
+  const btn = el("btnConfirmRemorque");
+  const errBox = el("modalErrorRemorque");
+  errBox.style.display = "none";
+
+  const immatriculation = el("rImmat").value.trim();
+  if (!immatriculation) {
+    errBox.textContent = "L'immatriculation est obligatoire.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  const payload = {
+    immatriculation,
+    unit: el("rUnit").value || null,
+    carte_grise_expiration: el("rCarteGrise").value || null,
+    carte_bleue_expiration: el("rCarteBleue").value || null,
+    visite_technique_expiration: el("rVisiteTechnique").value || null,
+    assurance_expiration: el("rAssurance").value || null,
+    licence_transport_expiration: el("rLicenceTransport").value || null,
+    patente_talcsa_expiration: el("rPatenteTalcsa").value || null,
+  };
+
+  btn.disabled = true;
+  btn.textContent = "Enregistrement…";
+  try {
+    if (remorqueEnEdition) {
+      await api.updateRemorque(remorqueEnEdition.id, payload);
+      showToast("Remorque mise à jour.");
+    } else {
+      await api.createRemorque(payload);
+      showToast("Remorque créée avec succès.");
+    }
+    closeModalRemorque();
+    await loadRemorques();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = remorqueEnEdition ? "Enregistrer" : "Créer la remorque";
   }
 }
 
