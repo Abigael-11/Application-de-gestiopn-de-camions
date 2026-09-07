@@ -1,9 +1,10 @@
 from sqlalchemy import (
-    Column, Integer, String, Numeric, Boolean, ForeignKey, TIMESTAMP, Text, Index
+    Column, Integer, String, Numeric, Boolean, ForeignKey, TIMESTAMP, Text, Index, Date
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
+from datetime import date
 
 
 class Utilisateur(Base):
@@ -34,9 +35,31 @@ class Camion(Base):
     actif = Column(Boolean, default=True)
     lien_dossier_externe = Column(String(300), nullable=True)  # ex: URL vers le dossier/GPS de l'autre appli
     chauffeur_actuel = Column(String(100), nullable=True)  # nom du chauffeur assigné à ce camion
+    carte_grise_expiration = Column(Date, nullable=True)
+    carte_bleue_expiration = Column(Date, nullable=True)
+    visite_technique_expiration = Column(Date, nullable=True)
+    assurance_expiration = Column(Date, nullable=True)
+    licence_transport_expiration = Column(Date, nullable=True)
+    patente_talcsa_expiration = Column(Date, nullable=True)
     cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     historique = relationship("HistoriqueEtat", back_populates="camion")
+
+
+class Remorque(Base):
+    __tablename__ = "remorques"
+
+    id = Column(Integer, primary_key=True, index=True)
+    immatriculation = Column(String(20), unique=True, nullable=False)
+    unit = Column(String(20), unique=True, nullable=True)
+    actif = Column(Boolean, default=True)
+    carte_grise_expiration = Column(Date, nullable=True)
+    carte_bleue_expiration = Column(Date, nullable=True)
+    visite_technique_expiration = Column(Date, nullable=True)
+    assurance_expiration = Column(Date, nullable=True)
+    licence_transport_expiration = Column(Date, nullable=True)
+    patente_talcsa_expiration = Column(Date, nullable=True)
+    cree_le = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class Chauffeur(Base):

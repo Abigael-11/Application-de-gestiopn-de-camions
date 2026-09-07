@@ -424,3 +424,44 @@ def supprimer_chauffeur_definitif(db: Session, chauffeur_id: int):
 
     db.delete(chauffeur)
     db.commit()
+
+
+def create_remorque(db: Session, remorque: schemas.RemorqueCreate) -> models.Remorque:
+    db_remorque = models.Remorque(**remorque.dict())
+    db.add(db_remorque)
+    db.commit()
+    db.refresh(db_remorque)
+    return db_remorque
+
+
+def list_remorques(db: Session, inclure_inactifs: bool = False):
+    query = db.query(models.Remorque)
+    if not inclure_inactifs:
+        query = query.filter(models.Remorque.actif == True)
+    return query.all()
+
+
+def get_remorque(db: Session, remorque_id: int) -> models.Remorque:
+    return db.query(models.Remorque).filter(models.Remorque.id == remorque_id).first()
+
+
+def update_remorque(db: Session, remorque_id: int, updates: schemas.RemorqueUpdate) -> models.Remorque:
+    remorque = get_remorque(db, remorque_id)
+    for champ, valeur in updates.model_dump(exclude_unset=True).items():
+        setattr(remorque, champ, valeur)
+    db.commit()
+    db.refresh(remorque)
+    return remorque
+
+
+def supprimer_remorque(db: Session, remorque_id: int):
+    """
+    Suppression définitive. Pour l'instant aucune donnée n'est liée aux
+    remorques -- l'Étape C (lien mission) réintroduira une vérification
+    similaire à supprimer_camion, pour ne pas perdre de traçabilité.
+    """
+    remorque = get_remorque(db, remorque_id)
+    if not remorque:
+        raise HTTPException(status_code=404, detail="Remorque introuvable")
+    db.delete(remorque)
+    db.commit()

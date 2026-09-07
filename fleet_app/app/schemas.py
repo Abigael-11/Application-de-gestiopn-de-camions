@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 
@@ -50,6 +50,12 @@ class CamionBase(BaseModel):
     capacite_tonnes: Optional[float] = None
     lien_dossier_externe: Optional[str] = None
     chauffeur_actuel: Optional[str] = None
+    carte_grise_expiration: Optional[date] = None
+    carte_bleue_expiration: Optional[date] = None
+    visite_technique_expiration: Optional[date] = None
+    assurance_expiration: Optional[date] = None
+    licence_transport_expiration: Optional[date] = None
+    patente_talcsa_expiration: Optional[date] = None
 
 
 class CamionCreate(CamionBase):
@@ -65,9 +71,48 @@ class CamionUpdate(BaseModel):
     lien_dossier_externe: Optional[str] = None
     chauffeur_actuel: Optional[str] = None
     actif: Optional[bool] = None
+    carte_grise_expiration: Optional[date] = None
+    carte_bleue_expiration: Optional[date] = None
+    visite_technique_expiration: Optional[date] = None
+    assurance_expiration: Optional[date] = None
+    licence_transport_expiration: Optional[date] = None
+    patente_talcsa_expiration: Optional[date] = None
 
 
 class Camion(CamionBase):
+    id: int
+    actif: bool
+
+    class Config:
+        from_attributes = True
+
+class RemorqueBase(BaseModel):
+    immatriculation: str
+    unit: Optional[str] = None
+    carte_grise_expiration: Optional[date] = None
+    carte_bleue_expiration: Optional[date] = None
+    visite_technique_expiration: Optional[date] = None
+    assurance_expiration: Optional[date] = None
+    licence_transport_expiration: Optional[date] = None
+    patente_talcsa_expiration: Optional[date] = None
+
+
+class RemorqueCreate(RemorqueBase):
+    pass
+
+
+class RemorqueUpdate(BaseModel):
+    unit: Optional[str] = None
+    carte_grise_expiration: Optional[date] = None
+    carte_bleue_expiration: Optional[date] = None
+    visite_technique_expiration: Optional[date] = None
+    assurance_expiration: Optional[date] = None
+    licence_transport_expiration: Optional[date] = None
+    patente_talcsa_expiration: Optional[date] = None
+    actif: Optional[bool] = None
+
+
+class Remorque(RemorqueBase):
     id: int
     actif: bool
 

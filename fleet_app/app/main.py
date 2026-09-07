@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine, SessionLocal
-from app.routers import camions, stats, etats, auth, utilisateurs, chauffeurs, missions
+from app.routers import camions, stats, etats, auth, utilisateurs, chauffeurs, missions, remorques
 from app.init_donnees import initialiser_donnees
 
 
@@ -37,6 +37,7 @@ app.include_router(auth.router)
 app.include_router(utilisateurs.router)
 app.include_router(chauffeurs.router)
 app.include_router(missions.router)
+app.include_router(remorques.router)
 
 
 @app.get("/")
