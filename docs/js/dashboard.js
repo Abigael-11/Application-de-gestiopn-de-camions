@@ -117,7 +117,7 @@ function render() {
     if (currentFilter === "attente" && c.etat_actuel?.categorie !== "attente") return false;
     if (currentFilter === "immobilisation" && !(c.etat_actuel?.categorie !== "actif" && (c.duree_dans_etat_heures || 0) > SEUIL_ALERTE_HEURES)) return false;
     if (search) {
-      const haystack = `${c.camion.immatriculation} ${c.etat_actuel?.libelle || ""}`.toLowerCase();
+      const haystack = `${c.camion.immatriculation} ${c.camion.unit || ""} ${c.etat_actuel?.libelle || ""}`.toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;
@@ -136,13 +136,14 @@ function render() {
   tbody.innerHTML = rows.map((c) => {
     const anomalie = c.etat_actuel && c.etat_actuel.categorie !== "actif" && (c.duree_dans_etat_heures || 0) > SEUIL_ALERTE_HEURES;
     return `
-      <tr>
-        <td>
-          <div class="truck-id"><a href="camion.html?id=${c.camion.id}">${escapeHtml(c.camion.immatriculation)}</a> ${anomalie ? "⚠️" : ""}</div>
-          <div class="truck-sub">${escapeHtml(c.camion.marque || "—")} · ${c.camion.capacite_tonnes ? c.camion.capacite_tonnes + "t" : "—"}</div>
-        </td>
-        <td>${badgeHtml(c.etat_actuel)}</td>
-        <td class="${anomalie ? "since-anomalie" : "since-normal"}">${c.duree_dans_etat_heures !== null && c.duree_dans_etat_heures !== undefined ? formatDuree(c.duree_dans_etat_heures) : "—"}</td>
+  <tr>
+  <td>${escapeHtml(c.camion.unit || "—")}</td>
+  <td>
+    <div class="truck-id"><a href="camion.html?id=${c.camion.id}">${escapeHtml(c.camion.immatriculation)}</a> ${anomalie ? "⚠️" : ""}</div>
+    <div class="truck-sub">${escapeHtml(c.camion.marque || "")}${c.camion.capacite_tonnes ? ` · ${c.camion.capacite_tonnes}t` : ""}</div>
+  </td>
+  <td>${badgeHtml(c.etat_actuel)}</td>
+      <td class="${anomalie ? "since-anomalie" : "since-normal"}">${c.duree_dans_etat_heures !== null && c.duree_dans_etat_heures !== undefined ? formatDuree(c.duree_dans_etat_heures) : "—"}</td>
         <td>${escapeHtml(c.lieu || "—")}</td>
         <td>
           <div class="row-actions">
@@ -158,7 +159,7 @@ function render() {
 function openModal(camionId, immatriculation) {
   currentCamionIdPourModal = camionId;
   el("modalTitle").textContent = "Changer l'état";
-  el("modalSub").textContent = `Camion ${immatriculation}`;
+  el("modalSub").textContent = `Camion ${unit}`;
   el("modalError").style.display = "none";
   el("fLieu").value = "";
   el("fMarchandise").value = "";

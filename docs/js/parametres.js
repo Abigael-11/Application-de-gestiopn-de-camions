@@ -240,6 +240,12 @@ function ouvrirEdition(camion) {
   el("fUnit").value = camion.unit || "";
   el("modalError").style.display = "none";
   el("modalOverlay").classList.add("open");
+  el("fCarteGrise").value = camion.carte_grise_expiration || "";
+  el("fCarteBleue").value = camion.carte_bleue_expiration || "";
+  el("fVisiteTechnique").value = camion.visite_technique_expiration || "";
+  el("fAssurance").value = camion.assurance_expiration || "";
+  el("fLicenceTransport").value = camion.licence_transport_expiration || "";
+  el("fPatenteTalcsa").value = camion.patente_talcsa_expiration || "";
 }
 function closeModal() { el("modalOverlay").classList.remove("open"); }
 
@@ -252,6 +258,12 @@ async function enregistrerLien() {
       unit: el("fUnit").value || null,
       lien_dossier_externe: el("fLien").value || null,
       chauffeur_actuel: el("fChauffeur").value || null,
+      carte_grise_expiration: el("fCarteGrise").value || null,
+      carte_bleue_expiration: el("fCarteBleue").value || null,
+      visite_technique_expiration: el("fVisiteTechnique").value || null,
+      assurance_expiration: el("fAssurance").value || null,
+      licence_transport_expiration: el("fLicenceTransport").value || null,
+      patente_talcsa_expiration: el("fPatenteTalcsa").value || null,
     });
     closeModal();
     showToast("Camion mis à jour.");
@@ -274,7 +286,13 @@ function ouvrirNouveauCamion() {
   el("cChauffeur").value = "";
   el("modalErrorCamion").style.display = "none";
   el("modalOverlayCamion").classList.add("open");
-}
+  el("cCarteGrise").value = "";
+  el("cCarteBleue").value = "";
+  el("cVisiteTechnique").value = "";
+  el("cAssurance").value = "";
+  el("cLicenceTransport").value = "";
+  el("cPatenteTalcsa").value = "";
+  }
 function closeModalCamion() { el("modalOverlayCamion").classList.remove("open"); }
 
 async function enregistrerNouveauCamion() {
@@ -299,6 +317,12 @@ async function enregistrerNouveauCamion() {
       marque: el("cMarque").value || null,
       capacite_tonnes: el("cCapacite").value ? parseFloat(el("cCapacite").value) : null,
       chauffeur_actuel: el("cChauffeur").value || null,
+      carte_grise_expiration: el("cCarteGrise").value || null,
+      carte_bleue_expiration: el("cCarteBleue").value || null,
+      visite_technique_expiration: el("cVisiteTechnique").value || null,
+      assurance_expiration: el("cAssurance").value || null,
+      licence_transport_expiration: el("cLicenceTransport").value || null,
+      patente_talcsa_expiration: el("cPatenteTalcsa").value || null,
     });
     closeModalCamion();
     showToast("Camion créé avec succès.");
@@ -610,7 +634,7 @@ async function loadChauffeurs() {
     // Remplit le menu déroulant "Camion affecté" du modal
     const select = el("chCamionId");
     select.innerHTML = '<option value="">— Aucun —</option>' +
-      camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.immatriculation)}</option>`).join("");
+    camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.unit || c.camion.immatriculation)}</option>`).join("");
 
     if (!chauffeurs.length) {
       el("chauffeursBody").innerHTML = `<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:24px;">Aucun chauffeur enregistré pour l'instant.</td></tr>`;
@@ -627,7 +651,7 @@ async function loadChauffeurs() {
           <td>${escapeHtml(ch.numero_permis || "—")}${ch.categorie_permis ? " (" + escapeHtml(ch.categorie_permis) + ")" : ""}</td>
           <td style="${expiresBientot ? 'color:var(--immob);font-weight:600;' : ''}">${ch.date_expiration_permis ? new Date(ch.date_expiration_permis).toLocaleDateString("fr-FR") : "—"}${expiresBientot ? " ⚠" : ""}</td>
           <td>${escapeHtml(ch.disponibilite || "—")}</td>
-          <td>${camion ? escapeHtml(camion.camion.immatriculation) : "—"}</td>
+          <td>${camion ? escapeHtml(camion.camion.unit || camion.camion.immatriculation) : "—"}</td>
           <td>
             <div class="row-actions">
               <button class="btn btn-secondary btn-sm" onclick='ouvrirEditionChauffeur(${JSON.stringify(ch)})'>✎ Modifier</button>

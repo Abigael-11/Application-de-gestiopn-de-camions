@@ -40,7 +40,7 @@ async function loadMissions() {
 
     const selectCamion = el("mCamionId");
     selectCamion.innerHTML = '<option value="">— Aucun —</option>' +
-      camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.immatriculation)}</option>`).join("");
+    camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.unit || c.camion.immatriculation)}</option>`).join("");
 
     const selectChauffeur = el("mChauffeurId");
     selectChauffeur.innerHTML = '<option value="">— Aucun —</option>' +
@@ -60,7 +60,7 @@ async function loadMissions() {
         <tr>
           <td>${escapeHtml(m.client || "—")}</td>
           <td>${escapeHtml(m.marchandise || "—")}</td>
-          <td>${camion ? escapeHtml(camion.camion.immatriculation) : "—"}</td>
+          <td>${camion ? escapeHtml(camion.camion.unit || camion.camion.immatriculation) : "—"}</td>
           <td>${chauffeur ? escapeHtml(chauffeur.prenom + " " + chauffeur.nom) : "—"}</td>
           <td>${escapeHtml(m.lieu_depart || "—")} → ${escapeHtml(m.lieu_destination || "—")}</td>
           <td>${m.date_depart_prevue ? new Date(m.date_depart_prevue).toLocaleString("fr-FR") : "—"}</td>
