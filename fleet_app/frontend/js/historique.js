@@ -34,9 +34,10 @@ async function loadAll() {
       api.historique(camionId, periodeJours),
       api.repartitionCategorieDg(camionId, periodeJours),
     ]);
-    el("bcCamion").textContent = statut.camion.immatriculation;
-    el("titreImmat").textContent = statut.camion.immatriculation;
-    el("sousTitre").textContent = `${statut.camion.marque || ""} · ${historique.length} événement${historique.length > 1 ? "s" : ""} enregistré${historique.length > 1 ? "s" : ""}`;
+      el("bcCamion").textContent = statut.camion.unit || statut.camion.immatriculation;
+      el("titreImmat").textContent = statut.camion.unit || statut.camion.immatriculation;
+      el("sousTitreImmat").textContent = statut.camion.unit ? statut.camion.immatriculation : "";
+      el("sousTitre").textContent = `${statut.camion.marque || ""} · ${historique.length} événement${historique.length > 1 ? "s" : ""} enregistré${historique.length > 1 ? "s" : ""}`;
 
     renderFrise(historique);
     renderTable(historique);

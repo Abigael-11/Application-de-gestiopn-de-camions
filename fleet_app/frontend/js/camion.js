@@ -61,10 +61,11 @@ function populateEtatSelect() {
 
 function renderHeader(statut) {
   const c = statut.camion;
-  document.title = `${c.immatriculation} — Fleet Ops`;
-  el("bcImmat").textContent = c.immatriculation;
-  el("titreImmat").textContent = c.immatriculation;
-  el("titreBadge").innerHTML = badgeHtml(statut.etat_actuel);
+  document.title = `${c.unit || c.immatriculation} — Fleet Ops`;
+el("bcImmat").textContent = c.unit || c.immatriculation;
+el("titreImmat").textContent = c.unit || c.immatriculation;
+el("sousTitreImmat").textContent = c.unit ? c.immatriculation : "";  
+el("titreBadge").innerHTML = badgeHtml(statut.etat_actuel);
 
   if (!["super_admin", "admin_transport", "dispatcher", "maintenance"].includes(session.getRole())) {
     el("btnChanger").style.display = "none";

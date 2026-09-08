@@ -57,6 +57,7 @@
     <div class="ptabs">
       <div class="ptab active" data-panel="etats">États</div>
       <div class="ptab" data-panel="camions">Camions</div>
+      <div class="ptab" data-panel="remorques">Remorques</div>
       <div class="ptab" data-panel="chauffeurs">Chauffeurs</div>
       <div class="ptab" data-panel="utilisateurs">Utilisateurs</div>
       <div class="ptab" data-panel="seuils">Seuils d'alerte</div>
@@ -86,8 +87,24 @@
           <thead><tr><th>Unit</th><th>Immatriculation</th><th>Flotte</th><th>Capacité</th><th>Chauffeur</th><th>Statut</th><th>Actions</th></tr></thead>
           <tbody id="camionsBody"><tr><td colspan="7"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
         </table>
+
+      
       </div>
     </div>
+
+
+    <!-- Remorques -->
+<div class="panel" id="panel-remorques">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+    <button class="btn btn-primary" id="btnNouvelleRemorque">+ Ajouter une remorque</button>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead><tr><th>Unit</th><th>Immatriculation</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody id="remorquesBody"><tr><td colspan="4"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+    </table>
+  </div>
+</div>
 
 
     <!-- Chauffeurs -->
@@ -248,11 +265,37 @@
     <p class="sub" id="modalSub"></p>
     <div class="modal-error" id="modalError"></div>
     <div class="field"><label for="fUnit">Unit</label><input type="text" id="fUnit" placeholder="ex : 083" /></div>
+    <div class="field"><label for="fCarteGrise">Carte grise — expiration</label><input type="date" id="fCarteGrise" /></div>
+    <div class="field"><label for="fCarteBleue">Carte bleue — expiration</label><input type="date" id="fCarteBleue" /></div>
+    <div class="field"><label for="fVisiteTechnique">Certificat de conformité (visite technique) — expiration</label><input type="date" id="fVisiteTechnique" /></div>
+    <div class="field"><label for="fAssurance">Assurance — expiration</label><input type="date" id="fAssurance" /></div>
+    <div class="field"><label for="fLicenceTransport">Licence de transport — expiration</label><input type="date" id="fLicenceTransport" /></div>
+    <div class="field"><label for="fPatenteTalcsa">Patente TALCSA — expiration</label><input type="date" id="fPatenteTalcsa" /></div>
     <div class="field"><label for="fChauffeur">Chauffeur assigné</label><input type="text" id="fChauffeur" placeholder="ex : Paul Ondimba" /></div> 
-    <div class="field"><label for="fLien">Lien vers le dossier externe (GPS, rapports…)</label><input type="text" id="fLien" placeholder="https://…" /></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancel">Annuler</button>
       <button class="btn btn-primary" id="btnConfirm">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nouvelle/modifier remorque -->
+<div class="modal-overlay" id="modalOverlayRemorque">
+  <div class="modal">
+    <h3 id="modalRemorqueTitre">Nouvelle remorque</h3>
+    <p class="sub">Enregistre une remorque et ses documents.</p>
+    <div class="modal-error" id="modalErrorRemorque"></div>
+    <div class="field"><label for="rUnit">Unit (identifiant court)</label><input type="text" id="rUnit" placeholder="ex : R12" /></div>
+    <div class="field"><label for="rImmat">Immatriculation</label><input type="text" id="rImmat" placeholder="ex : LTTR 378 AS" /></div>
+    <div class="field"><label for="rCarteGrise">Carte grise — expiration</label><input type="date" id="rCarteGrise" /></div>
+    <div class="field"><label for="rCarteBleue">Carte bleue — expiration</label><input type="date" id="rCarteBleue" /></div>
+    <div class="field"><label for="rVisiteTechnique">Certificat de conformité (visite technique) — expiration</label><input type="date" id="rVisiteTechnique" /></div>
+    <div class="field"><label for="rAssurance">Assurance — expiration</label><input type="date" id="rAssurance" /></div>
+    <div class="field"><label for="rLicenceTransport">Licence de transport — expiration</label><input type="date" id="rLicenceTransport" /></div>
+    <div class="field"><label for="rPatenteTalcsa">Patente TALCSA — expiration</label><input type="date" id="rPatenteTalcsa" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelRemorque">Annuler</button>
+      <button class="btn btn-primary" id="btnConfirmRemorque">Créer la remorque</button>
     </div>
   </div>
 </div>
@@ -267,6 +310,12 @@
     <div class="field"><label for="cImmat">Immatriculation</label><input type="text" id="cImmat" placeholder="ex : CIMAF-140" /></div>
     <div class="field"><label for="cMarque">Flotte / Marque</label><input type="text" id="cMarque" placeholder="ex : CIMAF, Flatbed…" /></div>
     <div class="field"><label for="cCapacite">Capacité (tonnes)</label><input type="number" id="cCapacite" placeholder="ex : 30" /></div>
+    <div class="field"><label for="cCarteGrise">Carte grise — expiration</label><input type="date" id="cCarteGrise" /></div>
+<div class="field"><label for="cCarteBleue">Carte bleue — expiration</label><input type="date" id="cCarteBleue" /></div>
+<div class="field"><label for="cVisiteTechnique">Certificat de conformité (visite technique) — expiration</label><input type="date" id="cVisiteTechnique" /></div>
+<div class="field"><label for="cAssurance">Assurance — expiration</label><input type="date" id="cAssurance" /></div>
+<div class="field"><label for="cLicenceTransport">Licence de transport — expiration</label><input type="date" id="cLicenceTransport" /></div>
+<div class="field"><label for="cPatenteTalcsa">Patente TALCSA — expiration</label><input type="date" id="cPatenteTalcsa" /></div>
     <div class="field"><label for="cChauffeur">Chauffeur assigné (optionnel)</label><input type="text" id="cChauffeur" placeholder="ex : Paul Ondimba" /></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCancelCamion">Annuler</button>

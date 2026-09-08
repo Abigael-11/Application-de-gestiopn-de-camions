@@ -3,6 +3,7 @@ const el = (id) => document.getElementById(id);
 let missionEnEdition = null;
 let camionsCache = [];
 let chauffeursCache = [];
+let remorquesCache = [];
 
 const STATUT_LABEL = {
   planifiee: "Planifiée",
@@ -30,17 +31,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadMissions() {
   try {
     const statutFiltre = el("filtreStatut").value;
-    const [missions, camions, chauffeurs] = await Promise.all([
+    const [missions, camions, chauffeurs, remorques] = await Promise.all([
       api.listMissions(statutFiltre),
       api.listCamions(true),
       api.listChauffeurs(true),
+      api.listRemorques(true),  
     ]);
     camionsCache = camions;
     chauffeursCache = chauffeurs;
+    remorquesCache = remorques;
 
     const selectCamion = el("mCamionId");
     selectCamion.innerHTML = '<option value="">— Aucun —</option>' +
-      camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.immatriculation)}</option>`).join("");
+    camions.map((c) => `<option value="${c.camion.id}">${escapeHtml(c.camion.unit || c.camion.immatriculation)}</option>`).join("");
+
+
+
+    const selectRemorque = el("mRemorqueId");
+    selectRemorque.innerHTML = '<option value="">— Aucune —</option>' +
+    remorques.map((r) => `<option value="${r.id}">${escapeHtml(r.unit || r.immatriculation)}</option>`).join("");
+
 
     const selectChauffeur = el("mChauffeurId");
     selectChauffeur.innerHTML = '<option value="">— Aucun —</option>' +
@@ -56,11 +66,12 @@ async function loadMissions() {
     el("missionsBody").innerHTML = missions.map((m) => {
       const camion = camionsCache.find((c) => c.camion.id === m.camion_id);
       const chauffeur = chauffeursCache.find((ch) => ch.id === m.chauffeur_id);
+      const remorque = remorquesCache.find((r) => r.id === m.remorque_id);
       return `
         <tr>
           <td>${escapeHtml(m.client || "—")}</td>
           <td>${escapeHtml(m.marchandise || "—")}</td>
-          <td>${camion ? escapeHtml(camion.camion.immatriculation) : "—"}</td>
+          <td>${camion ? escapeHtml(camion.camion.unit || camion.camion.immatriculation) : "—"}${remorque ? " / " + escapeHtml(remorque.unit || remorque.immatriculation) : ""}</td>
           <td>${chauffeur ? escapeHtml(chauffeur.prenom + " " + chauffeur.nom) : "—"}</td>
           <td>${escapeHtml(m.lieu_depart || "—")} → ${escapeHtml(m.lieu_destination || "—")}</td>
           <td>${m.date_depart_prevue ? new Date(m.date_depart_prevue).toLocaleString("fr-FR") : "—"}</td>
@@ -112,6 +123,7 @@ function ouvrirNouvelleMission() {
   el("mClient").value = "";
   el("mMarchandise").value = "";
   el("mCamionId").value = "";
+  el("mRemorqueId").value = "";
   el("mChauffeurId").value = "";
   el("mLieuDepart").value = "";
   el("mLieuDestination").value = "";
@@ -128,6 +140,7 @@ function ouvrirEditionMission(m) {
   el("mClient").value = m.client || "";
   el("mMarchandise").value = m.marchandise || "";
   el("mCamionId").value = m.camion_id || "";
+  el("mRemorqueId").value = m.remorque_id || "";
   el("mChauffeurId").value = m.chauffeur_id || "";
   el("mLieuDepart").value = m.lieu_depart || "";
   el("mLieuDestination").value = m.lieu_destination || "";
@@ -146,11 +159,22 @@ async function enregistrerMission() {
   const btn = el("btnConfirmMission");
   const errBox = el("modalErrorMission");
   errBox.style.display = "none";
+  if (!el("mCamionId").value) {
+    errBox.textContent = "Le tracteur (camion) est obligatoire.";
+    errBox.style.display = "block";
+    return;
+  }
+  if (!el("mRemorqueId").value) {
+    errBox.textContent = "La remorque est obligatoire.";
+    errBox.style.display = "block";
+    return;
+  }
 
   const payload = {
     client: el("mClient").value.trim() || null,
     marchandise: el("mMarchandise").value.trim() || null,
     camion_id: el("mCamionId").value ? parseInt(el("mCamionId").value) : null,
+    remorque_id: el("mRemorqueId").value ? parseInt(el("mRemorqueId").value) : null,
     chauffeur_id: el("mChauffeurId").value ? parseInt(el("mChauffeurId").value) : null,
     lieu_depart: el("mLieuDepart").value.trim() || null,
     lieu_destination: el("mLieuDestination").value.trim() || null,

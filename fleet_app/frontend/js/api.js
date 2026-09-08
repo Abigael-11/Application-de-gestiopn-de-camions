@@ -84,6 +84,14 @@ const api = {
   changerRoleUtilisateur: (id, role) =>
     apiFetch(`/utilisateurs/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
   deleteCamionDefinitif: (id) => apiFetch(`/camions/${id}/definitif`, { method: "DELETE" }),
+  listRemorques: (inclureInactifs) => apiFetch(`/remorques/${inclureInactifs ? "?inclure_inactifs=true" : ""}`),
+  getRemorque: (id) => apiFetch(`/remorques/${id}`),
+  createRemorque: (payload) =>
+    apiFetch("/remorques/", { method: "POST", body: JSON.stringify(payload) }),
+  updateRemorque: (id, payload) =>
+    apiFetch(`/remorques/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteRemorque: (id) =>
+    apiFetch(`/remorques/${id}`, { method: "DELETE" }),
   deleteUtilisateurDefinitif: (id) => apiFetch(`/utilisateurs/${id}/definitif`, { method: "DELETE" }),
   
   listChauffeurs: (inclureInactifs) => apiFetch(`/chauffeurs/${inclureInactifs ? "?inclure_inactifs=true" : ""}`),

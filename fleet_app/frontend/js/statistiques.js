@@ -78,7 +78,7 @@ function renderTrajets(groupes) {
             return `
               <div class="mission-ligne">
                 <div>
-                  <div>${escapeHtml(m.client || "Mission #" + m.id)} ${camion ? `· ${escapeHtml(camion.camion.immatriculation)}` : ""}</div>
+                  <div>${escapeHtml(m.client || "Mission #" + m.id)} ${camion ? `· ${escapeHtml(camion.camion.unit || camion.camion.immatriculation)}` : ""}</div>
                  <div style="color:var(--text-muted);font-size:11.5px;">${new Date(m.date_depart_prevue).toLocaleDateString("fr-FR")} (prévu) → ${new Date(m.date_arrivee_reelle).toLocaleDateString("fr-FR")} (réel)</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
