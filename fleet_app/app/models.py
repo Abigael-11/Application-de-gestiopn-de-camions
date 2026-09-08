@@ -158,6 +158,7 @@ class Mission(Base):
     marchandise = Column(String(150), nullable=True)
     camion_id = Column(Integer, ForeignKey("camions.id"), nullable=True)
     chauffeur_id = Column(Integer, ForeignKey("chauffeurs.id"), nullable=True)
+    remorque_id = Column(Integer, ForeignKey("remorques.id"), nullable=True)
     lieu_depart = Column(String(150), nullable=True)
     lieu_destination = Column(String(150), nullable=True)
     distance_km = Column(Numeric, nullable=True)

@@ -245,6 +245,7 @@ class MissionBase(BaseModel):
     client: Optional[str] = None
     marchandise: Optional[str] = None
     camion_id: Optional[int] = None
+    remorque_id: Optional[int] = None
     chauffeur_id: Optional[int] = None
     lieu_depart: Optional[str] = None
     lieu_destination: Optional[str] = None
@@ -256,7 +257,7 @@ class MissionBase(BaseModel):
 
 
 class MissionCreate(MissionBase):
-    pass
+    remorque_id: int  # Obligatoire à la création : une mission = tracteur + remorque
 
 
 class MissionUpdate(BaseModel):
@@ -264,6 +265,7 @@ class MissionUpdate(BaseModel):
     marchandise: Optional[str] = None
     camion_id: Optional[int] = None
     chauffeur_id: Optional[int] = None
+    remorque_id: Optional[int] = None
     lieu_depart: Optional[str] = None
     lieu_destination: Optional[str] = None
     distance_km: Optional[float] = None
