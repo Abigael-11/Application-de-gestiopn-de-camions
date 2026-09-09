@@ -465,3 +465,90 @@ def supprimer_remorque(db: Session, remorque_id: int):
         raise HTTPException(status_code=404, detail="Remorque introuvable")
     db.delete(remorque)
     db.commit()
+
+
+from datetime import date as date_type
+
+TYPES_DOCUMENTS = [
+    "carte_grise", "carte_bleue", "visite_technique",
+    "assurance", "licence_transport", "patente_talcsa",
+]
+
+
+def _calculer_statut_document(type_document: str, date_expiration, seuils_par_type: dict) -> dict:
+    if not date_expiration:
+        return {
+            "type_document": type_document,
+            "date_expiration": None,
+            "jours_restants": None,
+            "statut": "inconnu",
+        }
+
+    jours_restants = (date_expiration - date_type.today()).days
+    seuil = seuils_par_type.get(type_document)
+    seuil_jaune = seuil.seuil_jaune_jours if seuil else 30
+    seuil_rouge = seuil.seuil_rouge_jours if seuil else 7
+
+    if jours_restants <= seuil_rouge:
+        statut = "rouge"
+    elif jours_restants <= seuil_jaune:
+        statut = "jaune"
+    else:
+        statut = "vert"
+
+    return {
+        "type_document": type_document,
+        "date_expiration": date_expiration,
+        "jours_restants": jours_restants,
+        "statut": statut,
+    }
+
+
+def get_documents_vehicule(vehicule, type_vehicule: str, seuils_par_type: dict) -> dict:
+    documents = [
+        _calculer_statut_document(t, getattr(vehicule, f"{t}_expiration"), seuils_par_type)
+        for t in TYPES_DOCUMENTS
+    ]
+    return {
+        "id": vehicule.id,
+        "type_vehicule": type_vehicule,
+        "unit": vehicule.unit,
+        "immatriculation": vehicule.immatriculation,
+        "documents": documents,
+    }
+
+
+def get_tableau_bord_documents(db: Session):
+    seuils = list_seuils_documents(db)
+    seuils_par_type = {s.type_document: s for s in seuils}
+
+    camions = db.query(models.Camion).filter(models.Camion.actif == True).all()
+    remorques = db.query(models.Remorque).filter(models.Remorque.actif == True).all()
+
+    resultat = []
+    for c in camions:
+        resultat.append(get_documents_vehicule(c, "camion", seuils_par_type))
+    for r in remorques:
+        resultat.append(get_documents_vehicule(r, "remorque", seuils_par_type))
+    return resultat
+
+
+def list_seuils_documents(db: Session):
+    return db.query(models.SeuilDocument).all()
+
+
+def get_seuil_document(db: Session, type_document: str) -> models.SeuilDocument:
+    return db.query(models.SeuilDocument).filter(
+        models.SeuilDocument.type_document == type_document
+    ).first()
+
+
+def update_seuil_document(db: Session, type_document: str, updates: schemas.SeuilDocumentUpdate) -> models.SeuilDocument:
+    seuil = get_seuil_document(db, type_document)
+    if not seuil:
+        return None
+    for champ, valeur in updates.model_dump(exclude_unset=True).items():
+        setattr(seuil, champ, valeur)
+    db.commit()
+    db.refresh(seuil)
+    return seuil

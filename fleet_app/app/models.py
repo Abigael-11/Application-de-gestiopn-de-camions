@@ -172,3 +172,19 @@ class Mission(Base):
 
     camion = relationship("Camion")
     chauffeur = relationship("Chauffeur")
+
+
+class SeuilDocument(Base):
+    """
+    Seuils d'alerte configurables par type de document (carte grise, assurance...).
+    Une ligne par type. Utilisé pour calculer les statuts vert/jaune/rouge
+    sur le tableau de bord Documents.
+    """
+    __tablename__ = "seuils_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    type_document = Column(String(50), unique=True, nullable=False)
+    # ex: "carte_grise", "carte_bleue", "visite_technique", "assurance",
+    #     "licence_transport", "patente_talcsa"
+    seuil_jaune_jours = Column(Integer, nullable=False, default=30)
+    seuil_rouge_jours = Column(Integer, nullable=False, default=7)    

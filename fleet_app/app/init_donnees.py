@@ -12,7 +12,7 @@ pour lancer ces scripts à la main.
 """
 from sqlalchemy.orm import Session
 
-from app.models import EtatReference, Utilisateur
+from app.models import EtatReference, Utilisateur, SeuilDocument
 from app.auth import hash_password
 
 
@@ -84,8 +84,25 @@ MAPPING_CATEGORIE_DG = {
     "Accident": ["accident"],
 }
 
+SEUILS_DOCUMENTS_INITIAUX = [
+    {"type_document": "carte_grise", "seuil_jaune_jours": 30, "seuil_rouge_jours": 7},
+    {"type_document": "carte_bleue", "seuil_jaune_jours": 30, "seuil_rouge_jours": 7},
+    {"type_document": "visite_technique", "seuil_jaune_jours": 30, "seuil_rouge_jours": 7},
+    {"type_document": "assurance", "seuil_jaune_jours": 30, "seuil_rouge_jours": 7},
+    {"type_document": "licence_transport", "seuil_jaune_jours": 30, "seuil_rouge_jours": 7},
+    {"type_document": "patente_talcsa", "seuil_jaune_jours": 30, "seuil_rouge_jours": 7},
+]
+
+
 IDENTIFIANT_ADMIN_DEFAUT = "admin"
-MOT_DE_PASSE_ADMIN_DEFAUT = "admin123"
+MOT_DE_PASSE_ADMIN_DEFAUT = "talcsa@456"
+
+def _seed_seuils_documents(db: Session) -> None:
+    for seuil in SEUILS_DOCUMENTS_INITIAUX:
+        existant = db.query(SeuilDocument).filter_by(type_document=seuil["type_document"]).first()
+        if not existant:
+            db.add(SeuilDocument(**seuil))
+    db.commit()
 
 
 def _seed_etats(db: Session) -> None:
@@ -129,3 +146,4 @@ def initialiser_donnees(db: Session) -> None:
     _seed_etats(db)
     _seed_categorie_dg(db)
     _creer_admin_si_absent(db)
+    _seed_seuils_documents(db)

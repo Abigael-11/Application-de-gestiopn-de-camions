@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 
 
 # ---------- Authentification ----------
@@ -281,3 +281,36 @@ class MissionOut(MissionBase):
 
     class Config:
         from_attributes = True
+
+
+class SeuilDocumentBase(BaseModel):
+    type_document: str
+    seuil_jaune_jours: int
+    seuil_rouge_jours: int
+
+
+class SeuilDocumentUpdate(BaseModel):
+    seuil_jaune_jours: Optional[int] = None
+    seuil_rouge_jours: Optional[int] = None
+
+
+class SeuilDocument(SeuilDocumentBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class StatutDocument(BaseModel):
+    type_document: str
+    date_expiration: Optional[date] = None
+    jours_restants: Optional[int] = None
+    statut: str  # "vert" | "jaune" | "rouge" | "inconnu"
+
+
+class DocumentsVehicule(BaseModel):
+    id: int
+    type_vehicule: str  # "camion" | "remorque"
+    unit: Optional[str] = None
+    immatriculation: str
+    documents: List[StatutDocument]

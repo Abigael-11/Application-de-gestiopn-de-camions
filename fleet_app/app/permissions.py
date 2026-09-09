@@ -48,6 +48,10 @@ PERMISSIONS = {
     "missions:lire":      ["super_admin", "admin_transport", "dispatcher", "gestionnaire_flotte", "comptable"],
     "missions:modifier":  ["super_admin", "admin_transport", "dispatcher"],
     "missions:supprimer": ["super_admin", "admin_transport"],
+
+
+    "documents:lire": ["super_admin", "admin_transport", "comptable"],
+    "documents:modifier_seuils": ["super_admin", "comptable"],
 }
 
 
