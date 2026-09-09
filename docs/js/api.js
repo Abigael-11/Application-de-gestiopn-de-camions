@@ -91,9 +91,11 @@ const api = {
   updateRemorque: (id, payload) =>
     apiFetch(`/remorques/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteRemorque: (id) =>
-    apiFetch(`/remorques/${id}`, { method: "DELETE" }),
-  deleteUtilisateurDefinitif: (id) => apiFetch(`/utilisateurs/${id}/definitif`, { method: "DELETE" }),
-  
+   apiFetch(`/remorques/${id}`, { method: "DELETE" }),   // ← la suite de deleteRemorque, orpheline  
+  listSeuilsDocuments: () => apiFetch("/documents/seuils"),   // ← inséré ICI, coupant deleteRemorque en plein milieu
+  updateSeuilDocument: (typeDocument, payload) =>
+  apiFetch(`/documents/seuils/${typeDocument}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  tableauBordDocuments: () => apiFetch("/documents/tableau-bord"),
   listChauffeurs: (inclureInactifs) => apiFetch(`/chauffeurs/${inclureInactifs ? "?inclure_inactifs=true" : ""}`),
   createChauffeur: (payload) => apiFetch("/chauffeurs/", { method: "POST", body: JSON.stringify(payload) }),
   updateChauffeur: (id, payload) => apiFetch(`/chauffeurs/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
