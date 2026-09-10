@@ -24,8 +24,8 @@ PERMISSIONS = {
     "camions:supprimer_definitif": ["super_admin"], 
         "remorques:creer": ["super_admin", "admin_transport"],
     "remorques:lire": ["super_admin", "admin_transport", "dispatcher", "maintenance", "gestionnaire_flotte", "comptable"],
-    "remorques:modifier": ["super_admin", "admin_transport"],
-    "remorques:supprimer": ["super_admin", "admin_transport"],
+    "remorques:modifier": ["super_admin", "admin_transport","maintenance", "comptable"],
+    "remorques:supprimer": ["super_admin", "admin_transport", "maintenance", "comptable"],
     "remorques:supprimer_definitif": ["super_admin"],
 
     "etats:changer": ["super_admin", "admin_transport", "dispatcher", "maintenance"],

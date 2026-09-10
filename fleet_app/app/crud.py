@@ -456,16 +456,23 @@ def update_remorque(db: Session, remorque_id: int, updates: schemas.RemorqueUpda
 
 def supprimer_remorque(db: Session, remorque_id: int):
     """
-    Suppression définitive. Pour l'instant aucune donnée n'est liée aux
-    remorques -- l'Étape C (lien mission) réintroduira une vérification
-    similaire à supprimer_camion, pour ne pas perdre de traçabilité.
+    Suppression définitive -- bloquée si des missions référencent
+    encore cette remorque (pour ne jamais perdre de traçabilité par accident).
     """
     remorque = get_remorque(db, remorque_id)
     if not remorque:
         raise HTTPException(status_code=404, detail="Remorque introuvable")
+    nb_missions = db.query(models.Mission).filter(
+        models.Mission.remorque_id == remorque_id
+    ).count()
+    if nb_missions > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Impossible de supprimer : {nb_missions} mission(s) liée(s) à cette remorque. "
+                   f"Désactivez-la plutôt (l'historique sera conservé).",
+        )
     db.delete(remorque)
     db.commit()
-
 
 from datetime import date as date_type
 
