@@ -20,6 +20,10 @@ async function charger() {
     ]);
     camionsCache = camions;
 
+    const periode = parseInt(el("periodeEntreprise").value, 10);
+    await chargerTauxEntreprise(periode);
+    chargerTauxInstantane(camions);
+
     // Départ prévu -> arrivée réelle (le départ réel n'est pas saisi dans l'appli)
     const missionsAvecDurees = missions
       .filter((m) => m.date_depart_prevue && m.date_arrivee_reelle && m.lieu_depart && m.lieu_destination)
@@ -153,3 +157,42 @@ async function justifier(m, dureeMoyenneRoute) {
     box.innerHTML = `<div style="color:var(--immob)">Erreur lors de l'analyse : ${escapeHtml(err.message)}</div>`;
   }
 }
+
+
+
+async function chargerTauxEntreprise(jours) {
+  try {
+    const stats = await api.dureeMoyenne(null, jours);
+    const etats = await api.listEtats();
+    let heuresProductif = 0, heuresTotal = 0;
+    stats.forEach((s) => {
+      const etatRef = etats.find((e) => e.code === s.etat_code);
+      const heures = s.duree_moyenne_heures * s.nombre_occurrences;
+      heuresTotal += heures;
+      if (etatRef && (etatRef.categorie_dg === "Driving" || etatRef.categorie_dg === "Loading and offloading")) {
+        heuresProductif += heures;
+      }
+    });
+    const taux = heuresTotal > 0 ? (heuresProductif / heuresTotal) * 100 : null;
+    el("tauxEntrepriseValue").textContent = taux === null ? "—" : taux.toFixed(1) + " %";
+    el("tauxEntrepriseLabel").textContent = `Taux d'occupation entreprise (${jours}j)`;
+  } catch (err) {
+    console.error("Erreur tauxEntreprise:", err);
+    el("tauxEntrepriseValue").textContent = "Erreur";
+  }
+}
+
+function chargerTauxInstantane(camions) {
+  const actifs = camions.filter((c) => c.camion.actif);
+  const enMission = actifs.filter((c) =>
+    c.etat_actuel && (c.etat_actuel.categorie_dg === "Driving" || c.etat_actuel.categorie_dg === "Loading and offloading")
+  );
+  const taux = actifs.length > 0 ? (enMission.length / actifs.length) * 100 : null;
+  el("tauxInstantValue").textContent = taux === null ? "—" : taux.toFixed(1) + " %";
+  el("tauxInstantSub").textContent = `${enMission.length} / ${actifs.length} camions actifs`;
+}
+
+el("periodeEntreprise").addEventListener("change", async () => {
+  const periode = parseInt(el("periodeEntreprise").value, 10);
+  await chargerTauxEntreprise(periode);
+});

@@ -147,7 +147,7 @@ function render() {
         <td>${escapeHtml(c.lieu || "—")}</td>
         <td>
           <div class="row-actions">
-            ${["super_admin", "admin_transport", "dispatcher", "maintenance"].includes(session.getRole()) ? `<button class="btn btn-primary btn-sm" onclick="openModal(${c.camion.id}, '${escapeHtml(c.camion.immatriculation)}')">↻ Changer l'état</button>` : ""}
+          ${["super_admin", "admin_transport", "dispatcher", "maintenance"].includes(session.getRole()) ? `<button class="btn btn-primary btn-sm" onclick="openModal(${c.camion.id}, '${escapeHtml(c.camion.unit || c.camion.immatriculation)}')">↻ Changer l'état</button>` : ""}
             <a class="btn btn-secondary btn-sm" href="camion.html?id=${c.camion.id}">Traçabilité</a>
           </div>
         </td>
@@ -159,7 +159,7 @@ function render() {
 function openModal(camionId, immatriculation) {
   currentCamionIdPourModal = camionId;
   el("modalTitle").textContent = "Changer l'état";
-  el("modalSub").textContent = `Camion ${unit}`;
+  el("modalSub").textContent = `Camion ${immatriculation}`;
   el("modalError").style.display = "none";
   el("fLieu").value = "";
   el("fMarchandise").value = "";

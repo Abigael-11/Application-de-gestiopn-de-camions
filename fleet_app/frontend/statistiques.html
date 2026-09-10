@@ -39,6 +39,7 @@
     <a class="nav-item" href="index.html">🏠 Tableau de bord</a>
     <a class="nav-item" href="missions.html">📦 Missions</a>
     <a class="nav-item active" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item" href="documents.html" id="navDocuments">📄 Documents</a>
     <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
     <div class="sidebar-footer">
       <div class="team">Équipe Opération</div>
@@ -58,6 +59,27 @@
     <div id="emptyState" class="empty-state" style="display:none">
       <div class="empty-state-title">Pas encore assez de données</div>
       <div>Aucune mission terminée avec des dates de départ et d'arrivée réelles renseignées.</div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <select id="periodeEntreprise" style="width:auto;">
+        <option value="7">7 derniers jours</option>
+        <option value="30" selected>30 derniers jours</option>
+        <option value="90">90 derniers jours</option>
+      </select>
+    </div>
+    
+    <div class="metrics" style="margin-bottom:20px;">
+      <div class="detail-card">
+        <div class="detail-label" id="tauxEntrepriseLabel">Taux d'occupation entreprise (30j)</div>
+        <div class="detail-value" id="tauxEntrepriseValue">—</div>
+        <div class="detail-sub">Moyenne flotte — Driving + Loading and offloading / Total</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-label">Camions en mission (instantané)</div>
+        <div class="detail-value" id="tauxInstantValue">—</div>
+        <div class="detail-sub" id="tauxInstantSub">—</div>
+      </div>
     </div>
 
     <div id="trajetsContainer"></div>

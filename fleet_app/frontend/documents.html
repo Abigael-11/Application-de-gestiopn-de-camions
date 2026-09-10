@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>if (localStorage.getItem("fleetops_theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documents — Fleet Ops</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<style>
+  .doc-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .doc-vert { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+  .doc-jaune { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+  .doc-rouge { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+  .doc-inconnu { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+  .doc-cell { white-space: nowrap; font-size: 12px; }
+  .doc-cell .date { display: block; color: var(--text-muted); font-size: 10.5px; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><img src="img/logo.png" alt="Logo" /></div>
+      <div><div class="brand-name">FLEET OPS</div><div class="brand-sub">Suivi de flotte</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" href="index.html">🏠 Tableau de bord</a>
+    <a class="nav-item" href="missions.html">📦 Missions</a>
+    <a class="nav-item" href="statistiques.html">📊 Statistiques</a>
+    <a class="nav-item active" href="documents.html">📄 Documents</a>
+    <a class="nav-item" href="parametres.html">⚙️ Paramètres</a>
+    <div class="sidebar-footer">
+      <div class="team">Équipe Opération</div>
+      <div class="loc">Brazzaville · Congo</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Documents</h1>
+        <p class="page-subtitle">Suivi des dates d'expiration — camions et remorques</p>
+      </div>
+      <div class="row-actions" id="seuilsActions" style="display:none;">
+        <button class="btn btn-secondary" id="btnConfigurerSeuils">⚙ Configurer les seuils</button>
+      </div>
+    </div>
+
+    <div id="connError" class="conn-error" style="display:none"></div>
+
+    <div class="table-card" style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Unit</th>
+            <th>Immatriculation</th>
+            <th>Type</th>
+            <th>Carte grise</th>
+            <th>Carte bleue</th>
+            <th>Visite technique</th>
+            <th>Assurance</th>
+            <th>Licence transport</th>
+            <th>Patente TALCSA</th>
+          </tr>
+        </thead>
+        <tbody id="documentsBody"><tr><td colspan="9"><div class="skeleton" style="height:20px"></div></td></tr></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Modal configuration seuils -->
+<div class="modal-overlay" id="modalOverlaySeuils">
+  <div class="modal">
+    <h3>Configurer les seuils d'alerte</h3>
+    <p class="sub">Nombre de jours avant expiration pour déclencher chaque niveau d'alerte.</p>
+    <div class="modal-error" id="modalErrorSeuils"></div>
+    <div id="seuilsFields"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelSeuils">Annuler</button>
+      <button class="btn btn-primary" id="btnSaveSeuils">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/documents.js"></script>
+</body>
+</html>

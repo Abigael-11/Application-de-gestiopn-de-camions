@@ -126,3 +126,20 @@ if (loginForm) {
     }
   });
 }
+
+function setActiveNav() {
+  const currentPage = window.location.pathname.split("/").pop() || "index.html";
+  document.querySelectorAll(".nav-item").forEach((link) => {
+    const href = link.getAttribute("href");
+    if (href === currentPage) {
+      link.classList.add("active");
+    } else {
+      link.classList.remove("active");
+    }
+  });
+
+  const navDocuments = document.getElementById("navDocuments");
+  if (navDocuments && !["super_admin", "admin_transport", "comptable"].includes(session.getRole())) {
+    navDocuments.style.display = "none";
+  }
+}

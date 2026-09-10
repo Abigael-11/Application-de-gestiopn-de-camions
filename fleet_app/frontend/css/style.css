@@ -475,3 +475,8 @@ tbody tr:hover { background: rgba(0,0,0,0.02); }
 @media (max-width: 480px) {
   .metrics, .detail-cards { grid-template-columns: 1fr; }
 }
+
+.detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+.detail-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; margin-bottom: 10px; }
+.detail-value { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.detail-sub { font-size: 12px; color: var(--text-muted); }
