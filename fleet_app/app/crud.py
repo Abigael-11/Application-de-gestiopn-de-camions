@@ -295,9 +295,64 @@ def list_missions(db: Session, statut: str = None):
         query = query.filter(models.Mission.statut == statut)
     return query.order_by(models.Mission.date_depart_prevue.desc().nullslast()).all()
 
+def _rendre_aware(dt):
+    """Ajoute le fuseau UTC à un datetime naïf, sans toucher à ceux déjà avec fuseau."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
+
+def _verifier_chevauchement_mission(db: Session, mission_data: dict, mission_id_a_ignorer: int = None):
+    """
+    Vérifie que le camion, la remorque et le chauffeur ne sont pas déjà
+    affectés à une autre mission dont la période se chevauche.
+    Une mission sans date_arrivee_reelle est considérée comme occupant
+    le véhicule indéfiniment à partir de son départ.
+    Ignore les missions 'annulee' (jamais eu lieu).
+    """
+    depart = _rendre_aware(mission_data.get("date_depart_prevue"))
+    fin = _rendre_aware(mission_data.get("date_arrivee_reelle"))
+    if not depart:
+        return
+
+    fin_effective = fin or datetime(9999, 12, 31, tzinfo=timezone.utc)
+
+    champs_a_verifier = {
+        "camion_id": "Le tracteur",
+        "remorque_id": "La remorque",
+        "chauffeur_id": "Le chauffeur",
+    }
+
+    query_base = db.query(models.Mission).filter(models.Mission.statut != "annulee")
+    if mission_id_a_ignorer:
+        query_base = query_base.filter(models.Mission.id != mission_id_a_ignorer)
+
+    for champ, libelle in champs_a_verifier.items():
+        valeur = mission_data.get(champ)
+        if not valeur:
+            continue
+
+        candidates = query_base.filter(getattr(models.Mission, champ) == valeur).all()
+        for autre in candidates:
+            autre_debut = _rendre_aware(autre.date_depart_prevue)
+            if not autre_debut:
+                continue
+            autre_fin = _rendre_aware(autre.date_arrivee_reelle) or datetime(9999, 12, 31, tzinfo=timezone.utc)
+
+            if depart < autre_fin and autre_debut < fin_effective:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{libelle} est déjà affecté à la mission #{autre.id} "
+                           f"({autre.client or 'sans client'}, du "
+                           f"{autre_debut.strftime('%d/%m/%Y %H:%M')} au "
+                           f"{'indéfini' if not autre.date_arrivee_reelle else autre_fin.strftime('%d/%m/%Y %H:%M')}).",
+                )
 def create_mission(db: Session, mission: schemas.MissionCreate) -> models.Mission:
-    db_mission = models.Mission(**mission.model_dump())
+    mission_data = mission.model_dump()
+    _verifier_chevauchement_mission(db, mission_data)
+    db_mission = models.Mission(**mission_data)
     db.add(db_mission)
     db.commit()
     db.refresh(db_mission)
@@ -308,12 +363,24 @@ def update_mission(db: Session, mission_id: int, updates: schemas.MissionUpdate)
     mission = db.query(models.Mission).filter(models.Mission.id == mission_id).first()
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
-    for champ, valeur in updates.model_dump(exclude_unset=True).items():
+
+    updates_dict = updates.model_dump(exclude_unset=True)
+
+    # Fusionne l'état actuel + les nouvelles valeurs pour vérifier avec les données finales
+    mission_data_complete = {
+        "camion_id": updates_dict.get("camion_id", mission.camion_id),
+        "remorque_id": updates_dict.get("remorque_id", mission.remorque_id),
+        "chauffeur_id": updates_dict.get("chauffeur_id", mission.chauffeur_id),
+        "date_depart_prevue": updates_dict.get("date_depart_prevue", mission.date_depart_prevue),
+        "date_arrivee_reelle": updates_dict.get("date_arrivee_reelle", mission.date_arrivee_reelle),
+    }
+    _verifier_chevauchement_mission(db, mission_data_complete, mission_id_a_ignorer=mission_id)
+
+    for champ, valeur in updates_dict.items():
         setattr(mission, champ, valeur)
     db.commit()
     db.refresh(mission)
     return mission
-
 
 def supprimer_mission(db: Session, mission_id: int):
     mission = db.query(models.Mission).filter(models.Mission.id == mission_id).first()
