@@ -58,7 +58,16 @@ const TYPE_DOCUMENT_LABEL = {
       return `<td class="doc-cell"><span class="doc-badge doc-inconnu">Non renseigné</span></td>`;
     }
     const dateFormatee = new Date(doc.date_expiration).toLocaleDateString("fr-FR");
-    const labelStatut = doc.statut === "rouge" ? "Expire bientôt" : doc.statut === "jaune" ? "À surveiller" : "Valide";
+    let labelStatut;
+    if (doc.jours_restants < 0) {
+      labelStatut = "Expiré";
+    } else if (doc.statut === "rouge") {
+      labelStatut = "Expire bientôt";
+    } else if (doc.statut === "jaune") {
+      labelStatut = "À surveiller";
+    } else {
+      labelStatut = "Valide";
+    }
     return `<td class="doc-cell"><span class="doc-badge doc-${doc.statut}">${labelStatut}</span><span class="date">${dateFormatee} (${doc.jours_restants}j)</span></td>`;
   }
   
