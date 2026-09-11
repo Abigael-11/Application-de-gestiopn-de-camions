@@ -395,8 +395,6 @@ function ouvrirNouvelleRemorque() {
   el("rCarteBleue").value = "";
   el("rVisiteTechnique").value = "";
   el("rAssurance").value = "";
-  el("rLicenceTransport").value = "";
-  el("rPatenteTalcsa").value = "";
   el("modalErrorRemorque").style.display = "none";
   el("btnConfirmRemorque").textContent = "Créer la remorque";
   el("modalOverlayRemorque").classList.add("open");
@@ -411,8 +409,6 @@ function ouvrirEditionRemorque(r) {
   el("rCarteBleue").value = r.carte_bleue_expiration || "";
   el("rVisiteTechnique").value = r.visite_technique_expiration || "";
   el("rAssurance").value = r.assurance_expiration || "";
-  el("rLicenceTransport").value = r.licence_transport_expiration || "";
-  el("rPatenteTalcsa").value = r.patente_talcsa_expiration || "";
   el("modalErrorRemorque").style.display = "none";
   el("btnConfirmRemorque").textContent = "Enregistrer";
   el("modalOverlayRemorque").classList.add("open");
@@ -441,8 +437,6 @@ async function enregistrerRemorque() {
     carte_bleue_expiration: el("rCarteBleue").value || null,
     visite_technique_expiration: el("rVisiteTechnique").value || null,
     assurance_expiration: el("rAssurance").value || null,
-    licence_transport_expiration: el("rLicenceTransport").value || null,
-    patente_talcsa_expiration: el("rPatenteTalcsa").value || null,
   };
 
   btn.disabled = true;

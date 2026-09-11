@@ -40,20 +40,26 @@ const TYPE_DOCUMENT_LABEL = {
         return;
       }
       el("documentsBody").innerHTML = vehicules.map((v) => `
-        <tr>
-          <td><strong>${escapeHtml(v.unit || "—")}</strong></td>
-          <td>${escapeHtml(v.immatriculation)}</td>
-          <td>${v.type_vehicule === "camion" ? "🚚 Camion" : "🔗 Remorque"}</td>
-          ${ORDRE_DOCUMENTS.map((type) => renderCelluleDocument(v.documents.find((d) => d.type_document === type))).join("")}
-        </tr>
-      `).join("");
+      <tr>
+        <td><strong>${escapeHtml(v.unit || "—")}</strong></td>
+        <td>${escapeHtml(v.immatriculation)}</td>
+        <td>${v.type_vehicule === "camion" ? "🚚 Camion" : "🔗 Remorque"}</td>
+        ${ORDRE_DOCUMENTS.map((type) => {
+          const nonApplicable = v.type_vehicule === "remorque" && (type === "licence_transport" || type === "patente_talcsa");
+          return renderCelluleDocument(v.documents.find((d) => d.type_document === type), nonApplicable);
+        }).join("")}
+      </tr>
+    `).join("");
     } catch (err) {
       el("connError").style.display = "block";
       el("connError").innerHTML = `<strong>Connexion au serveur impossible.</strong><br>${escapeHtml(err.message)}`;
     }
   }
   
-  function renderCelluleDocument(doc) {
+  function renderCelluleDocument(doc, nonApplicable) {
+    if (nonApplicable) {
+      return `<td class="doc-cell" style="color:var(--text-muted);">—</td>`;
+    }
     if (!doc || doc.statut === "inconnu") {
       return `<td class="doc-cell"><span class="doc-badge doc-inconnu">Non renseigné</span></td>`;
     }
